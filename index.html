@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset=utf-8 />
+	<title>MixHammer - MXHR packaging service</title>
+	<link rel="stylesheet" type="text/css" media="screen" href="css/master.css" />
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script type="text/javascript" src="mxhr.js"></script>
+  <script>
+
+  // --------------------------------------
+  // Test code
+  // --------------------------------------
+
+  var totalImages = 0;
+
+  mixhammer.listen('image/png', function(payload, payloadId) {
+    var img = document.createElement('img');
+    img.src = 'data:image/png;base64,' + payload;
+    document.getElementById('mxhr-output').appendChild(img);
+
+    totalImages++;
+  });
+
+  mixhammer.listen('text/html', function(payload, payloadId) {
+    console.log('Found text/html payload:', payload, payloadId);
+  });
+
+  mixhammer.listen('text/javascript', function(payload, payloadId) {
+    eval(payload);
+  });
+
+  mixhammer.listen('complete', function() {
+
+  });
+
+  mixhammer.load('hammer.php');
+
+</script>
+</head>
+<body>
+  <h1>MXHR packaging service</h1>
+  <div id="mxhr-output">
+  </div>
+</body>
+</html>
