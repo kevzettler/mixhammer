@@ -1,54 +1,51 @@
 <?php
-  ini_get('display_errors');
- $_POST['payload'] = array(
-    "images" => array(
-      "http://kev.dev.myfit.com/images/img-doc_talk.png",
-      "http://kev.dev.myfit.com/images/header-logo.jpg",
-      "http://kev.dev.myfit.com/images/img-logo_techcrunch.png"
-    )
-  );
   
-  
-  if(!isset($_GET['payload']) && !isset($_POST['payload'])){
-    include_once('index.html');
+  if(empty($_GET) && empty($_POST)){
+    include_once('splash.html');
   }else{  
+  
+    $method = (isset($_POST['payload'])) ? $_POST : $_GET;
+    $callback = (isset($method['callback'])) ? $method['callback'] : '';
     $payloads = array();
     $images = array('');
     $stream = array();
-    $newline = chr(1);
+		$sep = chr(1); # control-char SOH/ASCII 1
+		$newline = chr(3); # control-char ETX/ASCII 3
+		
     
-    if(isset($_GET['payload'])){
-      $payloads = json_decode(stripslashes($_GET['payload']), true);
-    }else if(isset($_POST['payload'])){
-      $_POST['payload'] = json_encode($_POST['payload']);
-      $payloads = json_decode(stripslashes($_POST['payload']), true);   
+    if(isset($method['payload'])){
+      if(isset($method['form_submit'])){
+        $payloads['files'] = explode("\n", trim($method['payload']));
+      }else{
+        $payloads = json_decode(stripslashes($method['payload']), true);
+      }
     }
     
-    echo "<pre>";
-var_dump($payloads);
-echo "</pre>";
     
     if(empty($payloads)){
-      exit(json_encode(array('error' => 'the payload was empty or not propely formatted json')));
+      exit(json_encode(array('error' => 'the payload was empty or not propely formatted')));
     }
+    
+
     
     $mh = curl_multi_init();
     
     foreach($payloads as $payload_type => $payload_items){
       $count = 0;
-      foreach($payload_items as $item){
-        $count = $count+1;
-        $name = $payload_type . $count;
-        $$name = curl_init();
-        curl_setopt(${$name}, CURLOPT_URL, $item);
-        curl_setopt(${$name}, CURLOPT_RETURNTRANSFER, 1);
-        curl_multi_add_handle($mh,${$name});
+      foreach($payload_items as $key => $item){
+        if(preg_match("/(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/", $item)){
+          $count = $count+1;
+          $name = $payload_type . $count;
+          $$name = curl_init();
+          curl_setopt(${$name}, CURLOPT_URL, $item);
+          curl_setopt(${$name}, CURLOPT_RETURNTRANSFER, 1);
+          curl_multi_add_handle($mh,${$name});
+        }else{
+          print "<pre>{$name} was not a valid url \n</pre>";
+          unset($payloads[$payload_type][$key]);
+        }
       }
     }
-    
-    echo "<pre> about to execute mh";
-var_dump($mh);
-echo "</pre>";
     
      // Start performing the request
     do {
@@ -66,15 +63,10 @@ echo "</pre>";
       }
     }
     
-    echo "<pre> made it through shitty while loop";
-var_dump($execReturnValue, $numberReady);
-echo "</pre>";
-
     // Check for any errors
     if ($execReturnValue != CURLM_OK) {
-      trigger_error("Curl multi read error $execReturnValue\n", E_USER_WARNING);
+      error_log("Curl multi read error $execReturnValue\n", E_USER_WARNING);
     }
-    
     
     foreach($payloads as $payload_type => $payload_items){
       $count = 0;
@@ -84,9 +76,13 @@ echo "</pre>";
         // Check for errors
         $curlError = curl_error($$name);
         if($curlError == "") {
-          $res[$$name] = curl_multi_getcontent($$name);
+          $res[$$name] = array( 
+            'content_type' => curl_getinfo($$name, CURLINFO_CONTENT_TYPE),
+            'data' => base64_encode(curl_multi_getcontent($$name)),
+            'id' => $count - 1
+          );
         } else {
-          print "Curl error on handle $i: $curlError\n";
+          print "Curl error on handle $name : $curlError\n\r";
         }
         // Remove and close the handle
         curl_multi_remove_handle($mh, ${$name});
@@ -96,12 +92,11 @@ echo "</pre>";
     
     // Clean up the curl_multi handle
     curl_multi_close($mh);
-    
     // Print the response data
-    echo 'printing result';
-    print_r($res);
-
+    foreach($res as $result){
+      $stream[] =  $result['content_type'] . $sep . (isset($result['id']) ? $result['id'] : '') . $sep . $result['data'];
+    }
     
+    echo 1 . $newline . implode($newline, $stream) . $newline;
   }
-
 ?>
