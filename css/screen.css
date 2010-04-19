@@ -1,3 +1,32 @@
 @import url('reset.css');
 @import url('960.css');
 @import url('text.css');
+
+
+/* start of custom styles */
+body{
+	font-size:62.5%;
+	font-family: "Trebuchet MS",Helvetica,Jamrul,sans-serif;
+}
+
+*{margin:0;padding:0;}
+/* sticky footer stuff */
+html, body, #wrap {height: 100%;}
+body > #wrap {height: auto; min-height: 100%;}
+body:before{/*opera */
+  content:"";
+  height:100%;
+  float:left;
+  width:0;
+  margin-top:-32767px;
+}
+
+p{font-size: 1.8em;}
+label{font-size: 1.2em;}
+
+#main{overflow:auto;padding-bottom:25px;/*must be footer height*/padding-top:25px;}
+#footer{background-color:#e1e1e1;border-radius:5px;-webkig-border-radius:5px;-moz-border-radius:5px;color:#696969;position:relative; margin-top:-25px; height:25px; clear:both;}
+#footer a{color:#696969;}
+#footer *{padding-top:5px;}
+
+textarea{width:98%;height:300px;padding:5px;}

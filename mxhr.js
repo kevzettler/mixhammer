@@ -63,8 +63,8 @@
 	//          implement MHXR, that could be a while.
 	// ================================================================================
 
-	mixhammer = window.mixhammer || {};
-	mixhammer = {
+	F = window.F || {};
+	F.mxhr = {
 		
 		// --------------------------------------------------------------------------------
 		// Variables that must be global within this object.
@@ -90,7 +90,7 @@
 		// Instantiate the XHR object and request data from url.
 		// --------------------------------------------------------------------------------
 
-		load: function(url) {
+		load: function(settings) {
 			this.req = this.createXhrObject();
 			if (this.req) {
 				this.req.open('GET', url, true);
@@ -175,8 +175,7 @@
 		getLatestPacket: function() {
 			var length = this.req.responseText.length;
 			var packet = this.req.responseText.substring(this.lastLength, length);
-      
-      
+
 			this.processPacket(packet);
 			this.lastLength = length;
 		},
@@ -189,6 +188,7 @@
 		// --------------------------------------------------------------------------------
  
 		processPacket: function(packet) {
+
 			if (packet.length < 1) return;
 
 			// Find the beginning and the end of the payload. 
