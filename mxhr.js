@@ -90,7 +90,7 @@
 		// Instantiate the XHR object and request data from url.
 		// --------------------------------------------------------------------------------
 
-		load: function(settings) {
+		load: function(url) {
 			this.req = this.createXhrObject();
 			if (this.req) {
 				this.req.open('GET', url, true);

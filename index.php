@@ -21,12 +21,9 @@
       }
     }
     
-    
     if(empty($payloads)){
       exit(json_encode(array('error' => 'the payload was empty or not propely formatted')));
     }
-    
-
     
     $mh = curl_multi_init();
     
