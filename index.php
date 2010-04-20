@@ -75,9 +75,13 @@
         if($curlError == "") {
           $res[$$name] = array( 
             'content_type' => curl_getinfo($$name, CURLINFO_CONTENT_TYPE),
-            'data' => base64_encode(curl_multi_getcontent($$name)),
+            'data' => curl_multi_getcontent($$name),
             'id' => $count - 1
           );
+          if(strstr($res[$$name]['content_type'], 'image/')){
+            $res[$$name]['data'] = base64_encode($res[$$name]['data']);
+          }
+          
         } else {
           print "Curl error on handle $name : $curlError\n\r";
         }

@@ -29,4 +29,4 @@ label{font-size: 1.2em;}
 #footer a{color:#696969;}
 #footer *{padding-top:5px;}
 
-textarea{width:98%;height:300px;padding:5px;}
+textarea, iframe{width:98%;height:300px;padding:5px; border:1px solid black;}
