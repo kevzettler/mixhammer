@@ -36,8 +36,9 @@
  * @link http://github.com/digg/dui
  *
  */
-(function($) {
 
+(function() {
+	
 	// ================================================================================
 	// MXHR
 	// --------------------------------------------------------------------------------
@@ -62,19 +63,12 @@
 	//          implement MHXR, that could be a while.
 	// ================================================================================
 
-  /*
-  
-  $.getJSON("http://kev.dev.myfit.com/js/hammer.php?callback=?", function(data){
-      console.log(data.hammer);
-  });
-  
-  */
-
-$.mxhr = {
-	  
-	  // --------------------------------------------------------------------------------
+	$.mxhr = {
+		
+		// --------------------------------------------------------------------------------
 		// Variables that must be global within this object.
 		// --------------------------------------------------------------------------------
+
 		getLatestPacketInterval: null,
 		lastLength: 0,
 		listeners: {},
@@ -86,15 +80,17 @@ $.mxhr = {
 			'MSXML2.XMLHTTP.6.0',
 			'MSXML3.XMLHTTP',
 			'Microsoft.XMLHTTP', // Doesn't support readyState == 3 header requests.
-			'MSXML2.XMLHTTP.3.0' // Doesn't support readyState == 3 header requests.
+			'MSXML2.XMLHTTP.3.0', // Doesn't support readyState == 3 header requests.
 		],
-    
+		
+		settings : {method : 'GET'},
+
 		// --------------------------------------------------------------------------------
 		// load()
 		// --------------------------------------------------------------------------------
 		// Instantiate the XHR object and request data from url.
 		// --------------------------------------------------------------------------------
-
+    /*
 		load: function(url) {
 			this.req = this.createXhrObject();
 			if (this.req) {
@@ -107,6 +103,249 @@ $.mxhr = {
 
 				this.req.send(null);
 			}
+		},
+		*/
+		
+		load: function(settings){
+		  var that = this;
+		  this.req = $.ajax({
+                    url : settings.url,
+                    type : settings.method,
+                    data : settings.data,
+                    dataType : 'text',
+                    xhr : that.createXhrObject,
+                    beforeSend : function(xhr){ 
+                      xhr.onreadystatechange = function(){
+                        //that.req = xhr;
+                        that.readyStateHandler();
+                      }
+                    }
+                  });
+		},
+
+		// --------------------------------------------------------------------------------
+		// createXhrObject()
+		// --------------------------------------------------------------------------------
+		// Try different XHR objects until one works. Pulled from YUI Connection 2.6.0.
+		// --------------------------------------------------------------------------------
+		
+		createXhrObject: function() {
+		  console.log('creating xhr object');
+			var req;
+			try {
+				req = new XMLHttpRequest();
+			}
+			catch(e) {
+				for (var i = 0, len = this._msxml_progid.length; i < len; ++i) {
+					try {
+						req = new ActiveXObject(this._msxml_progid[i]);
+						break;
+					}
+					catch(e2) {  }
+				}
+			}
+			finally {
+				return req;
+			}
+		},		
+    
+		// --------------------------------------------------------------------------------
+		// readyStateHandler()
+		// --------------------------------------------------------------------------------
+		// Start polling on state 3; stop polling and fire off oncomplete event on state 4.
+		// --------------------------------------------------------------------------------
+
+		readyStateHandler: function() {
+
+			if (this.req.readyState === 3 && this.getLatestPacketInterval === null) {
+					
+				// Start polling.
+
+				var that = this;					
+				this.getLatestPacketInterval = window.setInterval(function() { that.getLatestPacket(); }, 15);
+			}
+
+			if (this.req.readyState == 4) {
+
+				// Stop polling.
+
+				clearInterval(this.getLatestPacketInterval);
+
+				// Get the last packet.
+
+				this.getLatestPacket();
+
+				// Fire the oncomplete event.
+
+				if (this.listeners.complete && this.listeners.complete.length) {
+					var that = this;
+					for (var n = 0, len = this.listeners.complete.length; n < len; n++) {
+						this.listeners.complete[n].apply(that);
+					}
+				}
+			}
+		},
+		
+		// --------------------------------------------------------------------------------
+		// getLatestPacket()
+		// --------------------------------------------------------------------------------
+		// Get all of the responseText downloaded since the last time this was executed.
+		// --------------------------------------------------------------------------------		
+    
+		getLatestPacket: function() {
+			var length = this.req.responseText.length;
+			var packet = this.req.responseText.substring(this.lastLength, length);
+
+			this.processPacket(packet);
+			this.lastLength = length;
+		},
+   
+		// --------------------------------------------------------------------------------
+		// processPacket()
+		// --------------------------------------------------------------------------------
+		// Keep track of incoming chunks of text; pass them on to processPayload() once
+		// we have a complete payload.
+		// --------------------------------------------------------------------------------
+ 
+		processPacket: function(packet) {
+
+			if (packet.length < 1) return;
+
+			// Find the beginning and the end of the payload. 
+
+			var startPos = packet.indexOf(this.boundary),
+			    endPos = -1;
+
+			if (startPos > -1) {
+				if (this.currentStream) {
+
+					// If there's an open stream, that's an end marker.
+
+					endPos = startPos;
+					startPos = -1;
+				} 
+				else {
+					endPos = packet.indexOf(this.boundary, startPos + this.boundary.length);
+				}
+			}
+
+			// Using the position markers, process the payload.
+
+			if (!this.currentStream) {
+
+				// Start a new stream.
+
+				this.currentStream = '';
+
+				if (startPos > -1) {
+
+					if (endPos > -1) {
+
+						// Use the end marker to grab the entire payload in one swoop
+
+						var payload = packet.substring(startPos, endPos);
+						this.currentStream += payload;
+
+						// Remove the payload from this chunk
+
+						packet = packet.slice(endPos);
+
+						this.processPayload();
+
+						// Start over on the remainder of this packet
+
+						try {
+							this.processPacket(packet);
+						}
+						catch(e) {  } // This catches the "Maximum call stack size reached" error in Safari (which has a really low call stack limit, either 100 or 500 depending on the version).
+					} 
+					else {
+						// Grab from the start of the start marker to the end of the chunk.
+
+						this.currentStream += packet.substr(startPos);
+
+						// Leave this.currentStream set and wait for another packet.
+					}
+				} 
+			} 
+			else {
+				// There is an open stream.
+
+				if (endPos > -1) {
+
+					// Use the end marker to grab the rest of the payload.
+
+					var chunk = packet.substring(0, endPos);
+					this.currentStream += chunk;
+
+					// Remove the rest of the payload from this chunk.
+					packet = packet.slice(endPos);
+
+					this.processPayload();
+
+					//Start over on the remainder of this packet.
+
+					this.processPacket(packet);
+				} 
+				else {
+					// Put this whole packet into this.currentStream.
+
+					this.currentStream += packet;
+
+					// Wait for another packet...
+				}
+			}
+		},
+
+		// --------------------------------------------------------------------------------
+		// processPayload()
+		// --------------------------------------------------------------------------------
+		// Extract the mime-type and pass the payload on to its listeners.
+		// --------------------------------------------------------------------------------
+    
+		processPayload: function() {
+
+			// Get rid of the boundary.
+			
+			this.currentStream = this.currentStream.replace(this.boundary, '');
+
+			// Perform some string acrobatics to separate the mime-type and id from the payload.
+			// This could be customized to allow other pieces of data to be passed in as well,
+			// such as image height & width.
+
+			var pieces = this.currentStream.split(this.fieldDelimiter);
+			var mime = pieces[0]
+			var payloadId = pieces[1];
+			var payload = pieces[2];
+
+			// Fire the listeners for this mime-type.
+
+			var that = this;
+			if (typeof this.listeners[mime] != 'undefined') {
+				for (var n = 0, len = this.listeners[mime].length; n < len; n++) {
+					this.listeners[mime][n].call(that, payload, payloadId);
+				}
+			}
+
+			delete this.currentStream;
+		},
+		
+		// --------------------------------------------------------------------------------
+		// listen()
+		// --------------------------------------------------------------------------------
+		// Registers mime-type listeners. Will probably rip this out and use YUI custom
+		// events at some point. For now, it's good enough.
+		// --------------------------------------------------------------------------------		
+    
+		listen: function(mime, callback) {
+			if (typeof this.listeners[mime] == 'undefined') {
+				this.listeners[mime] = [];
+			}
+
+			if (typeof callback === 'function') {
+				this.listeners[mime].push(callback);
+			}
 		}
-  });  
+	};
+
 })(jQuery);
