@@ -114,13 +114,14 @@
                     data : settings.data,
                     dataType : 'text',
                     xhr : that.createXhrObject,
-                    beforeSend : function(xhr){ 
-                      xhr.onreadystatechange = function(){
-                        //that.req = xhr;
-                        that.readyStateHandler();
-                      }
-                    }
+                    complete : settings.complete,
+                    success : settings.success
                   });
+      this.req._onreadystatechange = this.req.onreadystatechange;
+      
+      this.req.onreadystatechange = function() {
+           that.readyStateHandler();
+      };
 		},
 
 		// --------------------------------------------------------------------------------
@@ -130,7 +131,6 @@
 		// --------------------------------------------------------------------------------
 		
 		createXhrObject: function() {
-		  console.log('creating xhr object');
 			var req;
 			try {
 				req = new XMLHttpRequest();
@@ -156,7 +156,6 @@
 		// --------------------------------------------------------------------------------
 
 		readyStateHandler: function() {
-
 			if (this.req.readyState === 3 && this.getLatestPacketInterval === null) {
 					
 				// Start polling.
@@ -208,7 +207,6 @@
 		// --------------------------------------------------------------------------------
  
 		processPacket: function(packet) {
-
 			if (packet.length < 1) return;
 
 			// Find the beginning and the end of the payload. 
@@ -317,10 +315,11 @@
 			var mime = pieces[0]
 			var payloadId = pieces[1];
 			var payload = pieces[2];
+			
 
 			// Fire the listeners for this mime-type.
-
 			var that = this;
+			console.log('checking for mime listner ', mime, this.listeners);
 			if (typeof this.listeners[mime] != 'undefined') {
 				for (var n = 0, len = this.listeners[mime].length; n < len; n++) {
 					this.listeners[mime][n].call(that, payload, payloadId);
