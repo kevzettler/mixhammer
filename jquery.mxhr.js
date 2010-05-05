@@ -319,10 +319,9 @@
 
 			// Fire the listeners for this mime-type.
 			var that = this;
-			console.log('checking for mime listner ', mime, this.listeners);
 			if (typeof this.listeners[mime] != 'undefined') {
 				for (var n = 0, len = this.listeners[mime].length; n < len; n++) {
-					this.listeners[mime][n].call(that, payload, payloadId);
+					this.listeners[mime][n].call(that, payload, payloadId, mime);
 				}
 			}
 

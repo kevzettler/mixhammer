@@ -30,3 +30,6 @@ label{font-size: 1.2em;}
 #footer *{padding-top:5px;}
 
 textarea, iframe{width:98%;height:300px;padding:5px; border:1px solid black;}
+
+.asset_bin div{padding-left:10px;}
+.asset_link{font-size:1.2em;}
