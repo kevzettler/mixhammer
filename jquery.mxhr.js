@@ -113,9 +113,7 @@
                     type : settings.method,
                     data : settings.data,
                     dataType : 'text',
-                    xhr : that.createXhrObject,
-                    complete : settings.complete,
-                    success : settings.success
+                    xhr : that.createXhrObject
                   });
       this.req._onreadystatechange = this.req.onreadystatechange;
       
@@ -165,7 +163,7 @@
 			}
 
 			if (this.req.readyState == 4) {
-
+        
 				// Stop polling.
 
 				clearInterval(this.getLatestPacketInterval);
@@ -179,7 +177,7 @@
 				if (this.listeners.complete && this.listeners.complete.length) {
 					var that = this;
 					for (var n = 0, len = this.listeners.complete.length; n < len; n++) {
-						this.listeners.complete[n].apply(that);
+						this.listeners.complete[n].apply(that, [this.req.responseText]);
 					}
 				}
 			}
