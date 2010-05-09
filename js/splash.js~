@@ -1,0 +1,44 @@
+    $(document).ready(function(){
+      var $input_form = $('#input_form');
+      var $output = $('#output');
+      var $input = $('#input');
+      var $submit_btn = $("#form_submit");
+      $input_form.submit(function(){
+        var submit_default = $submit_btn.val();
+        $submit_btn.val('Loading...').attr('disabled', 'disabled');
+        //$submit_btn.click(function(){return false;});
+        var $this = $(this);
+        /*
+        $.ajax({
+          url : $this.attr('action'),
+          type : $this.attr('method'),
+          data : {
+            payload : $input.val(),
+            form_submit : true
+                  },
+          dataType : 'text',
+          success : function(data, text, xhr){
+            $output.val(data);
+            $submit_btn.val(submit_default).removeAttr('disabled');
+            //$submit_btn.click(function(){$input_form.submit();});
+          }
+        });
+        */
+        $.mxhr.load({
+          url : $this.attr('action'),
+          type : $this.attr('method'),
+          data : {
+            payload : $input.val(),
+            form_submit : true
+          }
+        });
+        return false;
+      });
+      
+      
+      $output.focus(function(){
+        var $this = $(this);
+        $this.select();
+      });
+      
+    });
