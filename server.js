@@ -1,4 +1,7 @@
 //node.js implementation of mixhammer backend
+String.prototype.trim = function () {
+    return this.replace(/^\s*/, "").replace(/\s*$/, "");
+}
 
 var sys = require('sys'),
   http = require('http'),
@@ -15,8 +18,9 @@ http.createServer(function (request, response) {
       images = {},
       stream = [],
       sep = String.fromCharCode(1);
-      newline = String.fromCharCode(3);
-    
+      newline = String.fromCharCode(3),
+      urlQuery = url.parse(request.url).query;
+      
   request.addListener("data", function(chunk){
     data += chunk;
   });
@@ -24,11 +28,15 @@ http.createServer(function (request, response) {
   request.addListener("end", function(){
     var totalassets = 0
         ,count = 0;
-    if(!data){ //if no data jus display the splash page
+    if(!data && !urlQuery){ //if no data jus display the splash page
       response.writeHead(200, {'Content-Type': 'text/html'});
       response.write(splash_html);
       response.end();
     }else{
+     if(!data){
+      data = urlQuery;
+     }
+    
      var httpParams = querystring.parse(data)
         ,headers = {
           'Date' : 'fake date'
@@ -38,6 +46,9 @@ http.createServer(function (request, response) {
           ,'Content-Encoding' : 'chunked'
           ,'Server' : 'node-apache'
         };
+        
+     sys.puts(sys.inspect(httpParams));   
+        
      total_response = response;
      total_response.writeHead(200, headers);
      total_response.write("1"+newline);
@@ -45,7 +56,7 @@ http.createServer(function (request, response) {
     //build up what files the request is for
     if(httpParams.payload){
       if(httpParams.lazy_mode){//lazy mode is for the demo 
-        payloads.files = httpParams.payload.split('\r\n');
+        payloads.files = httpParams.payload.split('\n');
       }else{
         //if were nto using lazy mode and passing more verbose data like ids
         //payloads = json_decode(stripslashes($request['payload']), true);
@@ -56,7 +67,7 @@ http.createServer(function (request, response) {
       totalassets += payloads[payload_type].length;
       for(var i=0; i<payloads[payload_type].length; i++){ (function(i){
         var rep_data = '',
-            urlObj = url.parse(payloads[payload_type][i]),
+            urlObj = url.parse(payloads[payload_type][i].trim()),
             httpClient = http.createClient(80, urlObj.hostname),
             httpC_req = httpClient.request('GET', urlObj.pathname, {'host' : urlObj.hostname});
         httpC_req.addListener('response', function(response){
