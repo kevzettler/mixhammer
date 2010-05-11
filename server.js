@@ -82,6 +82,7 @@ http.createServer(function (request, response) {
             }
             total_response.write(response.headers['content-type'] + sep + rep_data + newline);
             count++;
+            sys.puts("asset "+ count + " of " + totalassets);
             if(count == totalassets){
               httpC_req.end();
               total_response.end();
