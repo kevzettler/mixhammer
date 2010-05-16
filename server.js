@@ -9,7 +9,7 @@ var sys = require('sys'),
   url = require('url'),
   base64 = require('./base64'),
   querystring = require('querystring'),
-  splash_html = fs.readFileSync('splash.html'),
+  splash_html = fs.readFileSync('index.html'),
   url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
 
 http.createServer(function (request, response) {
@@ -47,7 +47,7 @@ http.createServer(function (request, response) {
           ,'Server' : 'node-apache'
         };
         
-     sys.puts(sys.inspect(httpParams));   
+     //sys.puts(sys.inspect(httpParams));   
         
      total_response = response;
      total_response.writeHead(200, headers);
@@ -56,13 +56,18 @@ http.createServer(function (request, response) {
     //build up what files the request is for
     if(httpParams.payload){
       if(httpParams.lazy_mode){//lazy mode is for the demo 
+        //sys.puts("omg lazy mode was set");
         payloads.files = httpParams.payload.split('\n');
+        sys.puts(sys.inspect(payloads));
       }else{
+        //sys.puts("not in lazy mode ....?");
         //if were nto using lazy mode and passing more verbose data like ids
         //payloads = json_decode(stripslashes($request['payload']), true);
       }
     }
     
+    //sys.puts("looping pay loads");
+    //sys.puts(sys.inspect(payloads));
     for(var payload_type in payloads){
       totalassets += payloads[payload_type].length;
       for(var i=0; i<payloads[payload_type].length; i++){ (function(i){
@@ -82,7 +87,7 @@ http.createServer(function (request, response) {
             }
             total_response.write(response.headers['content-type'] + sep + rep_data + newline);
             count++;
-            sys.puts("asset "+ count + " of " + totalassets);
+            //sys.puts("asset "+ count + " of " + totalassets);
             if(count == totalassets){
               httpC_req.end();
               total_response.end();

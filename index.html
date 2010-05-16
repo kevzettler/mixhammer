@@ -3,7 +3,7 @@
 <head>
 	<meta charset=utf-8 />
 	<title>MixHammer - MXHR packaging service</title>
-	<link rel="stylesheet" type="text/css" media="screen" href="css/screen.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="http://www.mixhammer.com/css/screen.css" />
 </head>
 <body>
   <div id="wrap" class="clearfix">
@@ -13,7 +13,7 @@
         <p class="grid_8 omega" style="padding-top:7px;">A general purpose <a href="http://about.digg.com/blog/duistream-and-mxhr" title="What is MXHR?">MXHR</a> package generator</p>
       </div>
       <div class="grid_12 clearfix">
-        <form class="alpha grid_6 clearfix" name="input_form" id="input_form" method="post" action="http://www.mixhammer.com/demo" >
+        <form class="alpha grid_6 clearfix" name="input_form" id="input_form" method="post" action="/demo" >
           <label>Input - Absolute urls to public assets, seperated with line breaks.</label>
           <textarea name="payload" id="input">http://mixhammer.com/favicon.gif
 http://mixhammer.com/js/splash.js
@@ -26,7 +26,7 @@ http://mixhammer.com/css/screen.css</textarea>
         </form>
     </div>
     <div class="grid_12 clearfix">
-      <div class="alpha grid_6 clearfix" id="standard-output"></div>
+      <div class="alpha grid_6 clearfix" id="standard-output" style="min-height:200px;"></div>
       <div class="omega grid_6 clearfix" id="mxhr-output"></div>
     </div>
   </div>
@@ -35,7 +35,7 @@ http://mixhammer.com/css/screen.css</textarea>
     <a class="grid_2" href="mailto:contact@mixhammer.com">contact@mixhammer.com</a>
   </div>
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-  <script type="text/javascript" src="jquery.mxhr.js"></script>
-  <script type="text/javascript" src="js/splash.js"></script>
+  <script type="text/javascript" src="http://www.mixhammer.com/jquery.mxhr.js"></script>
+  <script type="text/javascript" src="http://www.mixhammer.com/js/splash.js"></script>
 </body>
 </html>

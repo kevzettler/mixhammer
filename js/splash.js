@@ -171,7 +171,7 @@
           type : $this.attr('method'),
           data : {
             payload : $input.val(),
-            lazy_load : true
+            lazy_mode : true
           }/*,
           success : function(data, status){
             $output.val(data);
