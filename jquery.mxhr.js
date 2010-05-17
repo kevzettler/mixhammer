@@ -115,7 +115,9 @@
                     dataType : 'text',
                     xhr : that.createXhrObject
                   });
-      this.req._onreadystatechange = this.req.onreadystatechange;
+      
+      //console.log(this.req.onreadystatechange);
+      //this.req._onreadystatechange = this.req.onreadystatechange;
       
       this.req.onreadystatechange = function() {
            that.readyStateHandler();

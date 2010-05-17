@@ -29,6 +29,7 @@
       var assets = {};
       
       function processImage(payload, payloadId, mime){
+        console.log("processImage", payload, payloadId, mime);
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><img src="data:image/gif;base64,'+payload+'" style="display:none;"/>';
         if(!assets.images){
           assets.images = {count: 0, content: ''};
@@ -58,6 +59,7 @@
     
       $.mxhr.listen('complete', function(text) {
         var time = new Date().getTime() - streamStart;
+        console.log(assets);
         for(var asset in assets){
           if(assets.hasOwnProperty(asset)){
             totalAssets += assets[asset].count;

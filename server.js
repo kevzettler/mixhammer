@@ -40,7 +40,7 @@ http.createServer(function (request, response) {
      var httpParams = querystring.parse(data)
         ,headers = {
           'Date' : 'fake date'
-          ,'Content-Type' : 'text/html'
+          ,'Content-Type' : 'text/plain'
           ,'Vary' : 'Accept-Encoding'
           ,'Accept-Charset' : 'iso-8859-5, unicode-1-1;q=0.8'
           ,'Content-Encoding' : 'chunked'
@@ -85,7 +85,7 @@ http.createServer(function (request, response) {
            if (image_match && image_match.length >= 1){
               rep_data = base64.encode(rep_data);
             }
-            total_response.write(response.headers['content-type'] + sep + rep_data + newline);
+            total_response.write(response.headers['content-type'] + sep + '' + sep  + rep_data + newline);
             count++;
             //sys.puts("asset "+ count + " of " + totalassets);
             if(count == totalassets){
