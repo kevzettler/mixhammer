@@ -73,7 +73,7 @@
         }    
         $mxhr_output.prepend('<label>'+totalAssets+' assets in a MXHR request took: <strong>'+time+'ms</strong> about '+ (Math.round(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
         
-        totalAssets = 0;
+
         //assets = {};
         
         //process assets in a traditional manner
@@ -160,6 +160,7 @@
       
       //form submit
       $input_form.submit(function(){
+        totalAssets = 0;
         $submit_btn.val('Loading...').attr('disabled', 'disabled');
         $standard_output.empty();
         $mxhr_output.empty();
@@ -173,10 +174,7 @@
           data : {
             payload : $input.val(),
             lazy_mode : true
-          }/*,
-          success : function(data, status){
-            $output.val(data);
-          }*/
+          }
         });
         
         return false;
@@ -187,16 +185,5 @@
         var $this = $(this);
         $this.select();
       });
-      
-      /*
-      var xhr = $.ajax({ url : "./"});
-
-      xhr._onreadystatechange = xhr.onreadystatechange;
-      
-      xhr.onreadystatechange = function() {
-           xhr._onreadystatechange();
-           if (xhr.readyState == 3){alert('Interactive');}
-      };
-      */
       
     });
