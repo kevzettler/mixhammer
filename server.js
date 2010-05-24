@@ -85,7 +85,7 @@ http.createServer(function (request, response) {
            if (image_match && image_match.length >= 1){
               rep_data = base64.encode(rep_data);
             }
-            total_response.write(response.headers['content-type'] + sep + '' + sep  + rep_data + newline);
+            total_response.write(response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline);
             count++;
             //sys.puts("asset "+ count + " of " + totalassets);
             if(count == totalassets){
