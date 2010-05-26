@@ -10,6 +10,7 @@ var sys = require('sys'),
   base64 = require('./base64'),
   querystring = require('querystring'),
   splash_html = fs.readFileSync('index.html'),
+  Buffer = require('buffer').Buffer,
   url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
 
 http.createServer(function (request, response) {
@@ -40,10 +41,9 @@ http.createServer(function (request, response) {
      var httpParams = querystring.parse(data)
         ,headers = {
           'Date' : 'fake date'
-          ,'Content-Type' : 'text/plain'
+          ,'Content-Type' : 'text/html; charset=utf-8'
           ,'Vary' : 'Accept-Encoding'
-          ,'Accept-Charset' : 'iso-8859-5, unicode-1-1;q=0.8'
-          ,'Content-Encoding' : 'chunked'
+          ,'Content-Encoding' : 'base64'
           ,'Server' : 'node-apache'
         };
         
@@ -70,19 +70,27 @@ http.createServer(function (request, response) {
     //sys.puts(sys.inspect(payloads));
     for(var payload_type in payloads){
       totalassets += payloads[payload_type].length;
+
       for(var i=0; i<payloads[payload_type].length; i++){ (function(i){
+       var buffer = new Buffer(256);
         var rep_data = '',
             urlObj = url.parse(payloads[payload_type][i].trim()),
             httpClient = http.createClient(80, urlObj.hostname),
             httpC_req = httpClient.request('GET', urlObj.pathname, {'host' : urlObj.hostname});
+            offset = 0;
+
         httpC_req.addListener('response', function(response){
+          if (response.headers['content-type'].match('image')) {
+            response.setBodyEncoding('binary');
+          }
+          
           response.addListener('data', function(chunk){
-            rep_data += chunk;
+            rep_data += chunk;            
           });
           
           response.addListener('end', function(){
            var image_match = response.headers['content-type'].match('image')
-           if (image_match && image_match.length >= 1){
+           if (image_match && image_match.length >= 1) {
               rep_data = base64.encode(rep_data);
             }
             total_response.write(response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline);
