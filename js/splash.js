@@ -1,13 +1,14 @@
     $(document).ready(function(){
-      var $input_form = $('#input_form');
-      var $output = $('#output');
-      var $input = $('#input');
-      var $submit_btn = $("#form_submit");
-      var $mxhr_output = $('#mxhr-output');
-      var $standard_output = $('#standard-output');
-      var submit_default = $submit_btn.val();
-      var file_ext_regex = /\.([a-z]*?)$/i;
-      var streamstart;
+      var $input_form = $('#input_form')
+      , $output = $('#output')
+      , $input = $('#input')
+      , $submit_btn = $("#form_submit")
+      , $mxhr_output = $('#mxhr-output')
+      , $standard_output = $('#standard-output')
+      , submit_default = $submit_btn.val()
+      , file_ext_regex = /\.([a-z]*?)$/i
+      , streamstart
+      ;
       
       $('body').click(function(e){
         var $target = $(e.target);
@@ -29,7 +30,7 @@
       var assets = {};
       
       function processImage(payload, payloadId, mime){
-        var content = '<a href="#" class="asset_link">+ '+mime+'</a><img src="data:image/gif;base64,'+payload+'" style="display:none;"/>';
+        var content = '<a href="#" class="asset_link">+ '+mime+'</a><img src="data:image/gif;base64,'+payload+'" style="display:none;"/> <br />\n';
         if(!assets.images){
           assets.images = {count: 0, content: ''};
         }
@@ -39,7 +40,7 @@
       
       function processScript(payload, payloadId, mime){
         mime = mime.split('/')[1];
-        var content = '<a href="#" class="asset_link">+ '+mime+'</a><pre style="display:none;">'+payload+'</pre> \n';
+        var content = '<a href="#" class="asset_link">+ '+mime+'</a><pre style="display:none;">'+payload+'</pre> <br />\n';
         if(!assets[mime]){
           assets[mime] = {count: 0, content: ''};
         }
@@ -72,8 +73,6 @@
         }    
         $mxhr_output.prepend('<label>'+totalAssets+' assets in a MXHR request took: <strong>'+time+'ms</strong> about '+ (Math.round(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
         
-
-        //assets = {};
         
         //process assets in a traditional manner
         var normalStart = new Date().getTime();
@@ -87,7 +86,7 @@
             var time = new Date().getTime() - normalStart;
             for(var asset in std_assets_data){
               if(std_assets_data.hasOwnProperty(asset)){
-                var $the_bin = $standard_output.find('.'+asset+'_bin')
+                var $the_bin = $standard_output.find('.'+asset+'_bin');
                 $the_bin.find('.asset_link:first').text("+ " + std_assets_data[asset].count + " " + asset);
                 $the_bin.show();
               }
@@ -98,38 +97,65 @@
         
         $.each(std_assets, function(index, value){
           var ext = value.match(file_ext_regex)[1];          
-
+          
+          /*
+          * Handle images
+          */
           if(ext == 'gif' || ext == 'jpeg' || ext == 'jpg' || ext == 'png'){
             if(!std_assets_data.image){
               std_assets_data.image = {count : 0, content: ''};
             }
             
+            //make a bin 'containin div' for the imates
             if($standard_output.find('.image_bin').length <= 0){
               $standard_output.append('<div class="asset_bin image_bin" style="display:none;"><div style="display:none;"></div></div>');
             }
             
+            //build the image
             var img = document.createElement('img');
-            img.src = value + "?cache_bust=" + (new Date).getTime() * Math.random();
+            img.src = value + "?cache_bust=" + new Date().getTime() * Math.random();
             img.onload = function(){
               std_assets_data.image.count += 1;
               standardIncrement();
             };
+            
+            //build the link
             img.style.display = "none";
-            var link = document.createElement('a');
-            link.href = "#";
-            link.className = "asset_link";
-            link.innerHTML = '+ '+ext;
+            var img_link = document.createElement('a');
+            img_link.href = "#";
+            img_link.className = "asset_link";
+            img_link.innerHTML = '+ '+ext;
+            /*
             if(typeof std_assets_data.image.content == 'string'){
               std_assets_data.image.content = document.createDocumentFragment();
             }
-            std_assets_data.image.content.appendChild(link);
-            std_assets_data.image.content.appendChild(img);
+            */
             
-            $standard_output.find('.image_bin').prepend('<a href="#" class="asset_link">+ '+std_assets_data.image.count+' images</a> \n');
+            //build the break
+            var br = document.createElement('br');
+            
+            /*
+            //add them to the content
+            std_assets_data.image.content.appendChild(img_link);
+            std_assets_data.image.content.appendChild(img);
+            std_assets_data.image.content.appendChild(br);
+            */
+            
+            //if theres no top level link create one
+            if($standard_output.find('.image_bin .asset_link').length <= 0){
+              $standard_output.find('.image_bin').prepend('<a href="#" class="asset_link">+ '+std_assets_data.image.count+' images</a> \n');
+            }
+            
             var node = $standard_output.find('.image_bin div:first').get();
-            node[0].appendChild(std_assets_data.image.content.cloneNode(true));
+            node[0].appendChild(img_link);
+            node[0].appendChild(img);
+            node[0].appendChild(br);
+            //node[0].appendChild(std_assets_data.image.content.cloneNode(true));
           }
-                      
+          
+          /*
+          * Scripts, js, css
+          */
           if(ext == 'css' || ext == 'js'){
             if(!std_assets_data[ext]){
               std_assets_data[ext] = {count : 0, content: ''};
@@ -139,18 +165,23 @@
               $standard_output.append('<div class="asset_bin '+ext+'_bin" style="display:none;"><div style="display:none;"></div></div>');
             }
             
-            var src = value + "?cache_bust=" + (new Date).getTime() * Math.random();
+            var src = value + "?cache_bust=" + new Date().getTime() * Math.random();
             var iframe = $('<iframe src="'+src+'"></iframe>');
+            iframe.css({'display' : 'none'});
             iframe.load(function(){
               std_assets_data[ext].count += 1;
               standardIncrement();
             });
            
-            var link = $('<a href="#" class="asset_link">+ '+ext+'</a>');
+            var scp_link = $('<a href="#" class="asset_link">+ '+ext+'</a>');
             
-            $output.text(text);
-            $standard_output.find('.'+ext+'_bin').prepend('<a href="#" class="asset_link">+ '+std_assets_data[ext].count+' '+ ext + '</a> \n');
-            $standard_output.find('.'+ext+'_bin div:first').append(link).append(iframe);
+            $output.text(text);//I forgot what this does deprecated?
+            
+            //only append one link per asset type
+            if($standard_output.find('.'+ext+'_bin .asset_link').length <=0){
+              $standard_output.find('.'+ext+'_bin').prepend('<a href="#" class="asset_link">+ '+std_assets_data[ext].count+' '+ ext + '</a> \n');
+            }
+            $standard_output.find('.'+ext+'_bin div:first').append(scp_link).append(iframe).append('<br />');
           }
            
         });
@@ -178,11 +209,5 @@
         
         return false;
       });
-      
-      
-      $output.focus(function(){
-        var $this = $(this);
-        $this.select();
-      });
-      
+     
     });
