@@ -55,6 +55,7 @@
     
       $.mxhr.listen('text/html', processScript);
       $.mxhr.listen('application/javascript', processScript);
+      $.mxhr.listen('application/x-javascript', processScript);
       $.mxhr.listen('text/css', processScript);
     
       $.mxhr.listen('complete', function(text) {
