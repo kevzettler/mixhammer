@@ -9,7 +9,7 @@ var sys = require('sys'),
   url = require('url'),
   base64 = require('./base64'),
   querystring = require('querystring'),
-  splash_html = fs.readFileSync('/home/vekz/mixhammer.com/index.html'),
+  splash_html = fs.readFileSync('index.html'),
   Buffer = require('buffer').Buffer,
   url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
 

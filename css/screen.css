@@ -34,3 +34,8 @@ textarea, iframe, pre{width:98%;height:300px;padding:5px; border:1px solid black
 
 .asset_bin div{padding-left:10px;}
 .asset_link{font-size:1.2em;}
+
+#button_strip{padding-top:4px;}
+#button_strip input{margin: 0px 5px;}
+#button_strip input, #button_strip label{float:left;}
+#generate_button{margin-right:0!important; float:right;}
