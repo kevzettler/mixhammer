@@ -1,40 +1,66 @@
-//node.js implementation of mixhammer backend
+/*
+*node.js implementation of mixhammer backend
+*/
+
+/*
+*Trim 
+*removes whitespace on start and end of string
+*/
 String.prototype.trim = function () {
     return this.replace(/^\s*/, "").replace(/\s*$/, "");
 }
 
+//require node js librarys
 var sys = require('sys'),
   http = require('http'),
   fs = require('fs'),
   url = require('url'),
   base64 = require('./base64'),
-  querystring = require('querystring'),
-  splash_html = fs.readFileSync('index.html'),
-  Buffer = require('buffer').Buffer,
-  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
+  querystring = require('querystring');
+
+//html content for splash page
+var  splash_html = fs.readFileSync('index.html');
+  
+//regex for validating urls
+var  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
 
 http.createServer(function (request, response) {
   var data = "",
       payloads = {},
       images = {},
       stream = [],
-      sep = String.fromCharCode(1);
-      newline = String.fromCharCode(3),
+      mxhr_tree = {},
+      sep = String.fromCharCode(1);  //seperator character for MXHR response
+      newline = String.fromCharCode(3), //newline character for MXHR response
       urlQuery = url.parse(request.url).query;
       
+      
+   function processMxhrTree(){
+     var mxhr_string = '';
+     for(var asset in mxhr_tree){
+        for(var i=0; i<mxhr_tree[asset].count; i++){
+          mxhr_string += mxhr_tree[asset].mxhr;
+        }
+     }
+    return mxhr_string;
+  }     
+  
+  //fires as data arrives
   request.addListener("data", function(chunk){
     data += chunk;
   });
   
+  
+  //fires when request is complete
   request.addListener("end", function(){
     var totalassets = 0
         ,count = 0;
-    if(!data && !urlQuery){ //if no data jus display the splash page
+    if(!data && !urlQuery){ //if no data(POST) or urlQuery(GET) display the splash page
       response.writeHead(200, {'Content-Type': 'text/html'});
       response.write(splash_html);
       response.end();
     }else{
-     if(!data){
+     if(!data){// if no data(POST) assume urlQuery(GET) request
       data = urlQuery;
      }
     
@@ -47,12 +73,12 @@ http.createServer(function (request, response) {
           ,'Server' : 'node-apache'
         };
         
-     //sys.puts(sys.inspect(httpParams));   
         
      total_response = response;
      total_response.writeHead(200, headers);
+     //this first peice is supposed to be the mxhr version num, and a newline
      total_response.write("1"+newline);
-    
+     
     //build up what files the request is for
     if(httpParams.payload){
       if(httpParams.lazy_mode){//lazy mode is for the demo 
@@ -65,23 +91,35 @@ http.createServer(function (request, response) {
         //payloads = json_decode(stripslashes($request['payload']), true);
       }
     }
-    
-    //sys.puts("looping pay loads");
-    //sys.puts(sys.inspect(payloads));
+    //iterate over each payload_type. css, js, images, etc. Only 'files' for a lazy load      
     for(var payload_type in payloads){
-      totalassets += payloads[payload_type].length;
-
-      for(var i=0; i<payloads[payload_type].length; i++){ (function(i){
-       var buffer = new Buffer(256);
+      //totalassets += payloads[payload_type].length; //total up the assets for each section
+      
+      //iterate over each url in the payload collection and build the mxhr_tree
+      for(var i=0; i<payloads[payload_type].length; i++){ 
+        var asset_url = payloads[payload_type][i].trim();
+        if(!mxhr_tree[asset_url]){//set it if its not there
+          mxhr_tree[asset_url] = {count : 1, mxhr : ''};
+        }else{//otherwise increment it
+          mxhr_tree[asset_url].count += 1;
+        }
+      }
+    }
+    
+    //iterate over the mxhr_tree and call each url 
+    for (var asset in mxhr_tree){
+      totalassets += 1;
+      //create a closure to pair the asset with the asynch procedure
+      (function(asset){
+      
         var rep_data = '',
-            urlObj = url.parse(payloads[payload_type][i].trim()),
-            httpClient = http.createClient(80, urlObj.hostname),
-            httpC_req = httpClient.request('GET', urlObj.pathname, {'host' : urlObj.hostname});
-            offset = 0;
+            urlObj = url.parse(asset.trim()),
+            httpClient = http.createClient(80, urlObj.hostname), //create a httpClient for each asset
+            httpC_req = httpClient.request('GET', urlObj.pathname, {'host' : urlObj.hostname}); //use the httpClient to request the assets url
 
         httpC_req.addListener('response', function(response){
-          if (response.headers['content-type'].match('image')) {
-            response.setBodyEncoding('binary');
+          if (response.headers['content-type'].match('image')) { //images have to be encoded to binary
+            response.setEncoding('binary');
           }
           
           response.addListener('data', function(chunk){
@@ -89,26 +127,31 @@ http.createServer(function (request, response) {
           });
           
           response.addListener('end', function(){
-           var image_match = response.headers['content-type'].match('image')
-           if (image_match && image_match.length >= 1) {
-              rep_data = base64.encode(rep_data);
-            }
-            total_response.write(response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline);
+           //before we were only encoding the images, lets try encoding all general badassery
+           //can decode on frontend for displaying css / js
+           rep_data = base64.encode(rep_data);
+
+            mxhr_tree[asset].mxhr = response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline;
+            //total_response.write(response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline);
             count++;
-            //sys.puts("asset "+ count + " of " + totalassets);
+
             if(count == totalassets){
               httpC_req.end();
+              total_response.write(processMxhrTree());
               total_response.end();
+              
             }
-          });
-        });
-        httpC_req.end();
-      })(i);
+            
+          });//end of the response 'end' listener
+        });//end of the httpC_req 'response' listener
+        
+        httpC_req.end(); //if we get here make sure to kill the httpC_req
+      })(asset); //call the closure pass it i for a local scope
      }
+     
     }
-   }
   });
 
-}).listen(8000);
+}).listen(8000); //end of the server
 
 sys.puts('Server running at http://127.0.0.1:8000/');
