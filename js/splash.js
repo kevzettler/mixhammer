@@ -7,7 +7,7 @@
       , $standard_output = $('#standard-output')
       , submit_default = $submit_btn.val()
       , file_ext_regex = /\.([a-z]*?)$/i
-      , streamstart
+      , streamStart
       ;
       
       $('body').click(function(e){
@@ -191,23 +191,37 @@
       
       //form submit
       $input_form.submit(function(){
+        var $this = $(this);
         totalAssets = 0;
         $submit_btn.val('Loading...').attr('disabled', 'disabled');
         $standard_output.empty();
         $mxhr_output.empty();
-        var $this = $(this);
         
-        streamStart = new Date().getTime();
-        //use mxhr request for assets
-        $.mxhr.load({
+        function mxhr_call(cache_name){
+          streamStart = new Date().getTime();
+          //use mxhr request for assets
+          $.mxhr.load({
+            url : '/cache/'+cache_name+'.txt',
+            type : $this.attr('method')
+          });
+        }
+        
+        //ajax to the server to build the cache
+        $.ajax({
           url : $this.attr('action'),
           type : $this.attr('method'),
-          data : {
+          dataType: 'json',
+          data: {
             payload : $input.val(),
             lazy_mode : true
+          },
+          success : function(json){
+            if(json.cache){
+              mxhr_call(json.cache);
+            }
           }
         });
-        
+                
         return false;
       });
      

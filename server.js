@@ -15,6 +15,7 @@ var sys = require('sys'),
   http = require('http'),
   fs = require('fs'),
   url = require('url'),
+  crypto = require('crypto'),
   base64 = require('./base64'),
   querystring = require('querystring');
 
@@ -26,6 +27,7 @@ var  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w
 
 http.createServer(function (request, response) {
   var data = "",
+      cache_hash = "",
       payloads = {},
       images = {},
       stream = [],
@@ -34,9 +36,10 @@ http.createServer(function (request, response) {
       newline = String.fromCharCode(3), //newline character for MXHR response
       urlQuery = url.parse(request.url).query;
       
-      
+   //function for iterating over th mxhr tree and building the final response   
    function processMxhrTree(){
-     var mxhr_string = '';
+     //this first peice is supposed to be the mxhr version num, and a newline
+     mxhr_string = "1"+newline;
      for(var asset in mxhr_tree){
         for(var i=0; i<mxhr_tree[asset].count; i++){
           mxhr_string += mxhr_tree[asset].mxhr;
@@ -76,15 +79,28 @@ http.createServer(function (request, response) {
         
      total_response = response;
      total_response.writeHead(200, headers);
-     //this first peice is supposed to be the mxhr version num, and a newline
-     total_response.write("1"+newline);
      
     //build up what files the request is for
     if(httpParams.payload){
       if(httpParams.lazy_mode){//lazy mode is for the demo 
-        //sys.puts("omg lazy mode was set");
-        payloads.files = httpParams.payload.split('\n');
-        sys.puts(sys.inspect(payloads));
+       
+       //check for a cache, we hash the payload for cachename
+        var md5 = crypto.createHash('md5');
+        md5.update(httpParams.payload);
+        cache_hash = md5.digest('hex'); 
+        
+        //try reading the cache file
+       try{
+          var cache_stat = fs.readFileSync('cache/'+ cache_hash + '.txt');
+          if(cache_stat){
+            total_response.write('{"cache" : "'+cache_hash+'"}');
+            total_response.end();
+            return;
+          }
+        }catch(err){ //we have to build it other wise
+          payloads.files = httpParams.payload.split('\n');
+          sys.puts(sys.inspect(payloads));
+        }
       }else{
         //sys.puts("not in lazy mode ....?");
         //if were nto using lazy mode and passing more verbose data like ids
@@ -137,7 +153,9 @@ http.createServer(function (request, response) {
 
             if(count == totalassets){
               httpC_req.end();
-              total_response.write(processMxhrTree());
+              //total_response.write(processMxhrTree());
+              fs.writeFileSync('cache/'+cache_hash+'.txt', processMxhrTree());
+              total_response.write('{"cache" : "'+cache_hash+'"}');
               total_response.end();
               
             }
