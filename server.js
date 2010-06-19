@@ -20,7 +20,7 @@ var sys = require('sys'),
   querystring = require('querystring');
 
 //html content for splash page
-var  splash_html = fs.readFileSync('index.html');
+var  splash_html = fs.readFileSync('/home/vekz/mixhammer.com/index.html');
   
 //regex for validating urls
 var  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
@@ -91,7 +91,7 @@ http.createServer(function (request, response) {
         
         //try reading the cache file
        try{
-          var cache_stat = fs.readFileSync('cache/'+ cache_hash + '.txt');
+          var cache_stat = fs.readFileSync('/home/vekz/mixhammer.com/cache/'+ cache_hash + '.txt');
           if(cache_stat){
             total_response.write('{"cache" : "'+cache_hash+'"}');
             total_response.end();
@@ -154,7 +154,7 @@ http.createServer(function (request, response) {
             if(count == totalassets){
               httpC_req.end();
               //total_response.write(processMxhrTree());
-              fs.writeFileSync('cache/'+cache_hash+'.txt', processMxhrTree());
+              fs.writeFileSync('/home/vekz/mixhammer.com/cache/'+cache_hash+'.txt', processMxhrTree());
               total_response.write('{"cache" : "'+cache_hash+'"}');
               total_response.end();
               

@@ -74,7 +74,12 @@
         }    
         $mxhr_output.prepend('<label>'+totalAssets+' assets in a MXHR request took: <strong>'+time+'ms</strong> about '+ (Math.round(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
         
-        
+        //we haave to decode the pretags content from base64 to display it as readable code
+        $mxhr_output.find('pre').each(function(){
+           var $this = $(this);
+           $this.html(Base64.decode($this.html()));
+        });
+       
         //process assets in a traditional manner
         var normalStart = new Date().getTime();
         var std_assets = $input.val().split('\n');
@@ -197,6 +202,7 @@
         $standard_output.empty();
         $mxhr_output.empty();
         
+        //function to call the mxhr request
         function mxhr_call(cache_name){
           streamStart = new Date().getTime();
           //use mxhr request for assets
