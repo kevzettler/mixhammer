@@ -14,8 +14,10 @@
         var $target = $(e.target);
         if($target.hasClass('asset_link')){
           if($target.text().charAt(0) == '+'){
+	      _gaq.push(['_trackEvent', 'Click', 'Show', $target.text()]);
             $target.text($target.text().replace('+', '-'));
           }else{
+	      _gaq.push(['_trackEvent', 'Click', 'Hide', $target.text()]);
             $target.text($target.text().replace('-', '+'));
           }
           $target.next().toggle('slow');
@@ -60,6 +62,7 @@
     
       $.mxhr.listen('complete', function(text) {
         var time = new Date().getTime() - streamStart;
+	_gaq.push(['_trackEvent', 'Complete', 'MXHR', time, $input.val()]);
         for(var asset in assets){
           if(assets.hasOwnProperty(asset)){
             totalAssets += assets[asset].count;
@@ -90,6 +93,7 @@
           count++;
           if(count == std_assets.length){
             var time = new Date().getTime() - normalStart;
+	    _gaq.push(['_trackEvent', 'Complete', 'Standard', time, $input.val()]);
             for(var asset in std_assets_data){
               if(std_assets_data.hasOwnProperty(asset)){
                 var $the_bin = $standard_output.find('.'+asset+'_bin');
@@ -196,6 +200,7 @@
       
       //form submit
       $input_form.submit(function(){
+	_gaq.push(['_trackEvent', 'Click', 'Generate']);
         var $this = $(this);
         totalAssets = 0;
         $submit_btn.val('Loading...').attr('disabled', 'disabled');
@@ -204,6 +209,7 @@
         
         //function to call the mxhr request
         function mxhr_call(cache_name){
+	  _gaq.push(['_trackEvent', 'Cache', cache_name, $input.val()]);
           streamStart = new Date().getTime();
           //use mxhr request for assets
           $.mxhr.load({

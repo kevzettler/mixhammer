@@ -134,7 +134,7 @@ http.createServer(function (request, response) {
             httpC_req = httpClient.request('GET', urlObj.pathname, {'host' : urlObj.hostname}); //use the httpClient to request the assets url
 
         httpC_req.addListener('response', function(response){
-          if (response.headers['content-type'].match('image')) { //images have to be encoded to binary
+          if (response.headers['content-type'] && response.headers['content-type'].match('image')) { //images have to be encoded to binary
             response.setEncoding('binary');
           }
           
