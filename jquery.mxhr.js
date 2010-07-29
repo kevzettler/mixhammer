@@ -115,10 +115,7 @@
                     dataType : 'text',
                     xhr : that.createXhrObject
                   });
-      
-      //console.log(this.req.onreadystatechange);
-      //this.req._onreadystatechange = this.req.onreadystatechange;
-      
+            
       this.req.onreadystatechange = function() {
            that.readyStateHandler();
       };
@@ -161,13 +158,12 @@
 				// Start polling.
 
 				var that = this;					
-				this.getLatestPacketInterval = window.setInterval(function() { that.getLatestPacket(); }, 15);
+				this.getLatestPacketInterval = window.setInterval(function() { that.getLatestPacket(); }, 1);
 			}
 
 			if (this.req.readyState == 4) {
         
 				// Stop polling.
-
 				clearInterval(this.getLatestPacketInterval);
 
 				// Get the last packet.
@@ -177,6 +173,7 @@
 				// Fire the oncomplete event.
 
 				if (this.listeners.complete && this.listeners.complete.length) {
+				  this.lastLength = 0;//omg this needs to be reset on compeltion for subseqent requests
 					var that = this;
 					for (var n = 0, len = this.listeners.complete.length; n < len; n++) {
 						this.listeners.complete[n].apply(that, [this.req.responseText]);
@@ -193,8 +190,10 @@
     
 		getLatestPacket: function() {
 			var length = this.req.responseText.length;
+			
+			//we get the length of the response text correctly but the packet is being lost
 			var packet = this.req.responseText.substring(this.lastLength, length);
-
+			
 			this.processPacket(packet);
 			this.lastLength = length;
 		},
@@ -316,7 +315,6 @@
 			var payloadId = pieces[1];
 			var payload = pieces[2];
 			
-
 			// Fire the listeners for this mime-type.
 			var that = this;
 			if (typeof this.listeners[mime] != 'undefined') {

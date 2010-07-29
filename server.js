@@ -93,13 +93,14 @@ http.createServer(function (request, response) {
        try{
           var cache_stat = fs.readFileSync('/home/vekz/mixhammer.com/cache/'+ cache_hash + '.txt');
           if(cache_stat){
+            sys.puts("Payload was cached" + cache_hash + "\n");
             total_response.write('{"cache" : "'+cache_hash+'"}');
             total_response.end();
             return;
           }
         }catch(err){ //we have to build it other wise
           payloads.files = httpParams.payload.split('\n');
-          sys.puts(sys.inspect(payloads));
+          sys.puts("No Cache, building payload" + cache_hash + "\n" + sys.inspect(payloads));
         }
       }else{
         //sys.puts("not in lazy mode ....?");
@@ -148,12 +149,10 @@ http.createServer(function (request, response) {
            rep_data = base64.encode(rep_data);
 
             mxhr_tree[asset].mxhr = response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline;
-            //total_response.write(response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline);
             count++;
 
             if(count == totalassets){
               httpC_req.end();
-              //total_response.write(processMxhrTree());
               fs.writeFileSync('/home/vekz/mixhammer.com/cache/'+cache_hash+'.txt', processMxhrTree());
               total_response.write('{"cache" : "'+cache_hash+'"}');
               total_response.end();

@@ -8,16 +8,21 @@
       , submit_default = $submit_btn.val()
       , file_ext_regex = /\.([a-z]*?)$/i
       , streamStart
+      , totalAssets = 0
+      , assets = {}
       ;
       
+      //
+      // Click events for the show/hide tree links
+      //
       $('body').click(function(e){
         var $target = $(e.target);
         if($target.hasClass('asset_link')){
           if($target.text().charAt(0) == '+'){
-	      _gaq.push(['_trackEvent', 'Click', 'Show', $target.text()]);
+	          _gaq.push(['_trackEvent', 'Click', 'Show', $target.text()]);
             $target.text($target.text().replace('+', '-'));
           }else{
-	      _gaq.push(['_trackEvent', 'Click', 'Hide', $target.text()]);
+	          _gaq.push(['_trackEvent', 'Click', 'Hide', $target.text()]);
             $target.text($target.text().replace('-', '+'));
           }
           $target.next().toggle('slow');
@@ -26,11 +31,10 @@
       });
       
       // --------------------------------------
-      // Test code mxhr listner setup
+      // mxhr listner setup
       // --------------------------------------
-      var totalAssets = 0;
-      var assets = {};
       
+      //handle images
       function processImage(payload, payloadId, mime){
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><img src="data:image/gif;base64,'+payload+'" style="display:none;"/> <br />\n';
         if(!assets.images){
@@ -40,6 +44,7 @@
         assets.images.content += content;
       }
       
+      //handle 'scripts'
       function processScript(payload, payloadId, mime){
         mime = mime.split('/')[1];
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><pre style="display:none;">'+payload+'</pre> <br />\n';
@@ -59,10 +64,10 @@
       $.mxhr.listen('application/javascript', processScript);
       $.mxhr.listen('application/x-javascript', processScript);
       $.mxhr.listen('text/css', processScript);
-    
+      
       $.mxhr.listen('complete', function(text) {
         var time = new Date().getTime() - streamStart;
-	_gaq.push(['_trackEvent', 'Complete', 'MXHR', time, $input.val()]);
+        _gaq.push(['_trackEvent', 'Complete', 'MXHR', time, $input.val()]);
         for(var asset in assets){
           if(assets.hasOwnProperty(asset)){
             totalAssets += assets[asset].count;
@@ -76,6 +81,9 @@
           }
         }    
         $mxhr_output.prepend('<label>'+totalAssets+' assets in a MXHR request took: <strong>'+time+'ms</strong> about '+ (Math.round(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
+        
+        assets = {};
+        totalAssets = 0;
         
         //we haave to decode the pretags content from base64 to display it as readable code
         $mxhr_output.find('pre').each(function(){
@@ -93,7 +101,7 @@
           count++;
           if(count == std_assets.length){
             var time = new Date().getTime() - normalStart;
-	    _gaq.push(['_trackEvent', 'Complete', 'Standard', time, $input.val()]);
+            _gaq.push(['_trackEvent', 'Complete', 'Standard', time, $input.val()]);
             for(var asset in std_assets_data){
               if(std_assets_data.hasOwnProperty(asset)){
                 var $the_bin = $standard_output.find('.'+asset+'_bin');
@@ -135,21 +143,9 @@
             img_link.href = "#";
             img_link.className = "asset_link";
             img_link.innerHTML = '+ '+ext;
-            /*
-            if(typeof std_assets_data.image.content == 'string'){
-              std_assets_data.image.content = document.createDocumentFragment();
-            }
-            */
             
             //build the break
             var br = document.createElement('br');
-            
-            /*
-            //add them to the content
-            std_assets_data.image.content.appendChild(img_link);
-            std_assets_data.image.content.appendChild(img);
-            std_assets_data.image.content.appendChild(br);
-            */
             
             //if theres no top level link create one
             if($standard_output.find('.image_bin .asset_link').length <= 0){
@@ -160,7 +156,6 @@
             node[0].appendChild(img_link);
             node[0].appendChild(img);
             node[0].appendChild(br);
-            //node[0].appendChild(std_assets_data.image.content.cloneNode(true));
           }
           
           /*
@@ -198,26 +193,26 @@
         $('#form_submit').val(submit_default).removeAttr('disabled');
       });
       
+      //function to call the mxhr request
+      function mxhr_call(cache_name){
+        _gaq.push(['_trackEvent', 'Cache', cache_name, $input.val()]);
+        streamStart = new Date().getTime();
+        //use mxhr request for assets
+        $.mxhr.load({
+          url : '/cache/'+cache_name+'.txt',
+          type : $input_form.attr('method')
+        });
+      }
+      
       //form submit
       $input_form.submit(function(){
-	_gaq.push(['_trackEvent', 'Click', 'Generate']);
+        _gaq.push(['_trackEvent', 'Click', 'Generate']);
         var $this = $(this);
-        totalAssets = 0;
+        //reset every thing
         $submit_btn.val('Loading...').attr('disabled', 'disabled');
         $standard_output.empty();
         $mxhr_output.empty();
-        
-        //function to call the mxhr request
-        function mxhr_call(cache_name){
-	  _gaq.push(['_trackEvent', 'Cache', cache_name, $input.val()]);
-          streamStart = new Date().getTime();
-          //use mxhr request for assets
-          $.mxhr.load({
-            url : '/cache/'+cache_name+'.txt',
-            type : $this.attr('method')
-          });
-        }
-        
+                
         //ajax to the server to build the cache
         $.ajax({
           url : $this.attr('action'),
@@ -227,7 +222,7 @@
             payload : $input.val(),
             lazy_mode : true
           },
-          success : function(json){
+	    success : function(json){
             if(json.cache){
               mxhr_call(json.cache);
             }
