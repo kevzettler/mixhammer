@@ -35,7 +35,7 @@
       // --------------------------------------
       
       //handle images
-      function processImage(payload, payloadId, mime){
+      function processImage(payload, metaData, mime){
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><img src="data:image/gif;base64,'+payload+'" style="display:none;"/> <br />\n';
         if(!assets.images){
           assets.images = {count: 0, content: ''};
@@ -45,7 +45,7 @@
       }
       
       //handle 'scripts'
-      function processScript(payload, payloadId, mime){
+      function processScript(payload, metaData, mime){
         mime = mime.split('/')[1];
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><pre style="display:none;">'+payload+'</pre> <br />\n';
         if(!assets[mime]){

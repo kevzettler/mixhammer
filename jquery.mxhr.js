@@ -63,7 +63,17 @@
 	//          implement MHXR, that could be a while.
 	// ================================================================================
 
-	$.mxhr = {
+	$.extend({mxhr :{
+	
+	  //*******************************************
+	  // Jquery.MXHR plugin
+	  // is a pluginified port of Ross Harme's port of Digg's Dui.Stream LOL
+	  //
+	  // This plugin has added support for handling meta data in a MXHR request
+	  // http://techfoolery.com/mxhr/ 
+	  //
+	  //
+	  //******************************************
 		
 		// --------------------------------------------------------------------------------
 		// Variables that must be global within this object.
@@ -90,22 +100,12 @@
 		// --------------------------------------------------------------------------------
 		// Instantiate the XHR object and request data from url.
 		// --------------------------------------------------------------------------------
-    /*
-		load: function(url) {
-			this.req = this.createXhrObject();
-			if (this.req) {
-				this.req.open('GET', url, true);
-
-				var that = this;
-				this.req.onreadystatechange = function() {
-					that.readyStateHandler();
-				}
-
-				this.req.send(null);
-			}
-		},
-		*/
 		
+		/* Jquery load 
+		*
+		* extends $.ajax
+		*
+		*/
 		load: function(settings){
 		  var that = this;
 		  this.req = $.ajax({
@@ -312,14 +312,14 @@
 
 			var pieces = this.currentStream.split(this.fieldDelimiter);
 			var mime = pieces[0]
-			var payloadId = pieces[1];
+			var metaData = pieces[1];
 			var payload = pieces[2];
 			
 			// Fire the listeners for this mime-type.
 			var that = this;
 			if (typeof this.listeners[mime] != 'undefined') {
 				for (var n = 0, len = this.listeners[mime].length; n < len; n++) {
-					this.listeners[mime][n].call(that, payload, payloadId, mime);
+					this.listeners[mime][n].call(that, payload, metaData, mime);
 				}
 			}
 
@@ -329,8 +329,8 @@
 		// --------------------------------------------------------------------------------
 		// listen()
 		// --------------------------------------------------------------------------------
-		// Registers mime-type listeners. Will probably rip this out and use YUI custom
-		// events at some point. For now, it's good enough.
+		// Registers mime-type listeners. Process any meta data for the object in your listeners
+		// e.g. what elment to update with the data uri
 		// --------------------------------------------------------------------------------		
     
 		listen: function(mime, callback) {
@@ -342,6 +342,6 @@
 				this.listeners[mime].push(callback);
 			}
 		}
-	};
-
+	}
+	});
 })(jQuery);
