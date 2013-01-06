@@ -17,15 +17,34 @@ var sys = require('sys'),
   url = require('url'),
   crypto = require('crypto'),
   base64 = require('./base64'),
+  express = require('express'),
+  mongo = require('mongodb').MongoClient;
+  app = express();
   querystring = require('querystring');
-
-//html content for splash page
-var  splash_html = fs.readFileSync('/home/vekz/mixhammer.com/index.html');
   
 //regex for validating urls
 var  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
 
-http.createServer(function (request, response) {
+app.use('/public', express.static(__dirname+'/public'));
+app.get('/', function(req,res){
+    res.render("index.ejs");
+});
+
+app.get('/cache/:id', function(req, res){
+    var cache_hash = req.params.id;
+
+    mongo.connect("mongodb://localhost:27017/mixhammer", function(err, db) {
+      if(err) { return console.dir(err); }
+
+      var collection = db.collection('cache');
+      collection.findOne({hash: cache_hash}, function(err, item){
+        if(err) { return console.dir(err); }
+        res.send(item.package);
+    });
+  });
+});
+
+app.post('/', function (request, response) {
   var data = "",
       cache_hash = "",
       payloads = {},
@@ -49,20 +68,16 @@ http.createServer(function (request, response) {
   }     
   
   //fires as data arrives
-  request.addListener("data", function(chunk){
+  request.on("data", function(chunk){
     data += chunk;
   });
   
   
   //fires when request is complete
-  request.addListener("end", function(){
+  request.on("end", function(){
     var totalassets = 0
         ,count = 0;
-    if(!data && !urlQuery){ //if no data(POST) or urlQuery(GET) display the splash page
-      response.writeHead(200, {'Content-Type': 'text/html'});
-      response.write(splash_html);
-      response.end();
-    }else{
+
      if(!data){// if no data(POST) assume urlQuery(GET) request
       data = urlQuery;
      }
@@ -78,35 +93,42 @@ http.createServer(function (request, response) {
         
         
      total_response = response;
-     total_response.writeHead(200, headers);
+     //total_response.writeHead(200, headers);
      
     //build up what files the request is for
     if(httpParams.payload){
-      if(httpParams.lazy_mode){//lazy mode is for the demo 
-       
        //check for a cache, we hash the payload for cachename
-        var md5 = crypto.createHash('md5');
-        md5.update(httpParams.payload);
-        cache_hash = md5.digest('hex'); 
-        
+       var md5 = crypto.createHash('md5');
+       md5.update(httpParams.payload);
+       cache_hash = md5.digest('hex'); 
+       var cache_stat;        
         //try reading the cache file
-       try{
-          var cache_stat = fs.readFileSync('/home/vekz/mixhammer.com/cache/'+ cache_hash + '.txt');
-          if(cache_stat){
-            sys.puts("Payload was cached" + cache_hash + "\n");
-            total_response.write('{"cache" : "'+cache_hash+'"}');
-            total_response.end();
-            return;
-          }
-        }catch(err){ //we have to build it other wise
-          payloads.files = httpParams.payload.split('\n');
-          sys.puts("No Cache, building payload" + cache_hash + "\n" + sys.inspect(payloads));
-        }
-      }else{
-        //sys.puts("not in lazy mode ....?");
-        //if were nto using lazy mode and passing more verbose data like ids
-        //payloads = json_decode(stripslashes($request['payload']), true);
-      }
+        // try{
+        mongo.connect("mongodb://localhost:27017/mixhammer", function(err, db) {
+            if(err) { 
+                payloads.files = httpParams.payload.split('\n');
+                console.log("No Cache, building payload" + cache_hash + "\n", payloads);
+                return console.dir(err);
+            }
+
+            var collection = db.collection('cache');
+            collection.findOne({hash: cache_hash}, function(err, item){
+            if(err) {
+                payloads.files = httpParams.payload.split('\n');
+                console.log("No Cache, building payload" + cache_hash + "\n", payloads);
+                return console.dir(err);
+            }
+               cache_stat = item.package;
+               if(cache_stat){
+                  sys.puts("Payload was cached" + cache_hash + "\n");
+                  total_response.write('{"cache" : "'+cache_hash+'"}');
+                  total_response.end();
+                  return;
+               }
+           });
+        });
+
+
     }
     //iterate over each payload_type. css, js, images, etc. Only 'files' for a lazy load      
     for(var payload_type in payloads){
@@ -124,26 +146,34 @@ http.createServer(function (request, response) {
     }
     
     //iterate over the mxhr_tree and call each url 
+    console.log("iterating over assets", mxhr_tree);
     for (var asset in mxhr_tree){
+      if(asset == ''){ continue; }
       totalassets += 1;
       //create a closure to pair the asset with the asynch procedure
       (function(asset){
       
         var rep_data = '',
             urlObj = url.parse(asset.trim()),
-            httpClient = http.createClient(80, urlObj.hostname), //create a httpClient for each asset
-            httpC_req = httpClient.request('GET', urlObj.pathname, {'host' : urlObj.hostname}); //use the httpClient to request the assets url
+            httpOpts = {
+                port: 80, 
+                hostname: urlObj.hostname,
+                path: urlObj.pathname,
+                method: "GET"};
 
-        httpC_req.addListener('response', function(response){
+        console.log("requesting", httpOpts);
+
+        var req = http.request(httpOpts, function(response){
           if (response.headers['content-type'] && response.headers['content-type'].match('image')) { //images have to be encoded to binary
             response.setEncoding('binary');
           }
           
-          response.addListener('data', function(chunk){
+          response.on('data', function(chunk){
             rep_data += chunk;            
           });
           
-          response.addListener('end', function(){
+          response.on('end', function(){
+            console.log("got response for ", httpOpts);
            //before we were only encoding the images, lets try encoding all general badassery
            //can decode on frontend for displaying css / js
            rep_data = base64.encode(rep_data);
@@ -151,24 +181,36 @@ http.createServer(function (request, response) {
             mxhr_tree[asset].mxhr = response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline;
             count++;
 
-            if(count == totalassets){
-              httpC_req.end();
-              fs.writeFileSync('/home/vekz/mixhammer.com/cache/'+cache_hash+'.txt', processMxhrTree());
-              total_response.write('{"cache" : "'+cache_hash+'"}');
-              total_response.end();
-              
+            if(count == totalassets){              
+              req.end();
+              mongo.connect("mongodb://localhost:27017/mixhammer", function(err, db){
+                if(err) { 
+                    console.dir(err); 
+                    total_response.send('{"cache" : "'+cache_hash+'"}');
+                    total_response.end();
+                }
+
+                var cache = db.collection('cache');
+                var record = {hash: cache_hash,
+                              package :processMxhrTree()};
+                cache.insert(record, function(err, items){
+                    if(err) { console.dir(err); }
+                    console.log("ending total response");
+                    total_response.send('{"cache" : "'+cache_hash+'"}');
+                    total_response.end(); 
+                });
+              });             
             }
             
           });//end of the response 'end' listener
         });//end of the httpC_req 'response' listener
         
-        httpC_req.end(); //if we get here make sure to kill the httpC_req
+        req.end(); //if we get here make sure to kill the httpC_req
       })(asset); //call the closure pass it i for a local scope
      }
      
-    }
   });
 
-}).listen(8000); //end of the server
-
+})
+app.listen(8000);
 sys.puts('Server running at http://127.0.0.1:8000/');

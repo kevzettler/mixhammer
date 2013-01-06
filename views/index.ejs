@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MixHammer - MXHR packaging service</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="/public/css/screen.css" />
+ <script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-17054828-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</head>
+<body>
+  <div id="wrap" class="clearfix">
+    <div id="main" class="container_12 clearfix">
+      <div class="grid_12 clearfix">
+        <h1 class="grid_2 alpha">MixHammer</h1>
+        <p class="grid_8 omega" style="padding-top:7px;">A general purpose <a href="http://about.digg.com/blog/duistream-and-mxhr" title="What is MXHR?">MXHR</a> package generator</p>
+      </div>
+      <div class="grid_12 clearfix">
+        <form class="alpha grid_6 clearfix" name="input_form" id="input_form" method="post" action="/" >
+          <label>Input - Absolute urls to public assets, seperated with line breaks.</label>
+          <textarea name="payload" id="input">http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png
+          http://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Metal_Fatigue_Coverart.png/200px-Metal_Fatigue_Coverart.png          
+      </textarea>
+          <div id="button_strip">
+	    <!--
+	    <label>Try a demo, </label>
+	    <input type="button" value="small" />
+	    <input type="button" value="medium" />
+	    <input type="button" value="large" />
+	    -->
+	    <input type="submit" value="Generate &rarr;" name="lazy_mode" id="form_submit"/>
+	  </div>
+        </form>
+        <form name="output_form" method="Post" action="#" class="omega grid_6 clearfix">
+          <label>Output - Copy to your server. Load using <a href="http://github.com/kevzettler/mixhammer/blob/master/jquery.mxhr.js" alt="jQuery MXHR Plugin">the jQuery plugin</a></label>
+          <textarea readonly="readonly" name="output" id="output"></textarea>
+        </form>
+    </div>
+    <div class="grid_12 clearfix">
+      <div class="alpha grid_6 clearfix" id="standard-output" style="min-height:200px;"></div>
+      <div class="omega grid_6 clearfix" id="mxhr-output"></div>
+    </div>
+  </div>
+  </div>
+  <div id="footer" class="container_12 clearfix" >
+    <a class="grid_2" href="mailto:contact@mixhammer.com">contact@mixhammer.com</a>
+    <a class="grid_2" href="http://nodejs.org/">built on Node.js</a>
+  </div>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script type="text/javascript" src="public/js/jquery.mxhr.js"></script>
+  <script type="text/javascript" src="public/js/webtoolkit.base64.js"></script>
+  <script type="text/javascript" src="public/js/splash.js"></script>
+</body>
+</html>
