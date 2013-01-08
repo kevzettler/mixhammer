@@ -31,6 +31,8 @@ var sys = require('sys'),
 
   var mongoURL = (env) ? env.DOTCLOUD_DB_MONGODB_URL : "mongodb://localhost:27017/mixhammer";
 
+  console.log(mongoURL);
+
   
 //regex for validating urls
 var  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
