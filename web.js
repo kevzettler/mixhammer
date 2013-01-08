@@ -226,4 +226,4 @@ app.post('/', function (request, response) {
 
 })
 app.listen(port);
-sys.puts('Server running at http://127.0.0.1:8080/');
+sys.puts('Server running at http://127.0.0.1:'+port);
