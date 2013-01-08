@@ -135,6 +135,7 @@ app.post('/', function (request, response) {
             }
 
                if(typeof item != 'undefined'){
+                  console.log("checking for item!" item, typeof item);
                   cache_stat = item.package;
                   sys.puts("Payload was cached" + cache_hash + "\n");
                   total_response.write('{"cache" : "'+cache_hash+'"}');
