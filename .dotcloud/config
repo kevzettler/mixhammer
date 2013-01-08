@@ -1,6 +1,6 @@
 {
     "push_branch": null, 
-    "application": "mxhr", 
+    "application": "mixhammer", 
     "version": "0.9.3", 
     "push_protocol": "rsync"
 }
