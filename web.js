@@ -30,7 +30,9 @@ var sys = require('sys'),
 
   }
 
-  var mongoURL = (env) ? env.DOTCLOUD_DB_MONGODB_URL : "mongodb://localhost:27017/mixhammer";
+  var mongoURL = process.env.MONGOLAB_URI || 
+  process.env.MONGOHQ_URL || 
+  "mongodb://localhost:27017/mixhammer";
 
   console.log(mongoURL);
 
