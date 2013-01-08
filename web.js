@@ -20,7 +20,8 @@ var sys = require('sys'),
   express = require('express'),
   mongo = require('mongodb').MongoClient,
   app = express(),
-  querystring = require('querystring');
+  querystring = require('querystring'),
+  port = process.env.PORT || 8080;
 
   try{
       var env = JSON.parse(fs.readFileSync('/home/dotcloud/environment.json', 'utf-8'));
@@ -224,5 +225,5 @@ app.post('/', function (request, response) {
   });
 
 })
-app.listen(8080);
+app.listen(port);
 sys.puts('Server running at http://127.0.0.1:8080/');
