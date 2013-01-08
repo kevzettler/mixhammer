@@ -46,11 +46,11 @@ app.get('/cache/:id', function(req, res){
     var cache_hash = req.params.id;
 
     mongo.connect(mongoURL, function(err, db) {
-      if(err) { return console.dir("mongo connect for cache looup",err); }
+      if(err) { return console.log("mongo connect for cache looup",err); }
 
       var collection = db.collection('cache');
       collection.findOne({hash: cache_hash}, function(err, item){
-        if(err) { return console.dir("mongo cache lookup init",err); }
+        if(err) { return console.log("mongo cache lookup init",err); }
         res.send(item.package);
     });
   });
@@ -120,7 +120,7 @@ app.post('/', function (request, response) {
             if(err) { 
                 payloads.files = httpParams.payload.split('\n');
                 console.log("No Cache, building payload" + cache_hash + "\n", payloads);
-                return console.dir("mongo connect for cache:",err);
+                return console.log("mongo connect for cache:",err);
             }
 
             var collection = db.collection('cache');
@@ -128,7 +128,7 @@ app.post('/', function (request, response) {
             if(err) {
                 payloads.files = httpParams.payload.split('\n');
                 console.log("No Cache, building payload" + cache_hash + "\n", payloads);
-                return console.dir("mongo query for cache:",err);
+                return console.log("mongo query for cache:",err);
             }
                cache_stat = item.package;
                if(cache_stat){
@@ -197,7 +197,7 @@ app.post('/', function (request, response) {
               req.end();
               mongo.connect(mongoURL, function(err, db){
                 if(err) { 
-                    console.dir("mongo connect for write: ",err); 
+                    console.log("mongo connect for write: ",err); 
                     total_response.send('{"cache" : "'+cache_hash+'"}');
                     total_response.end();
                 }
@@ -206,7 +206,7 @@ app.post('/', function (request, response) {
                 var record = {hash: cache_hash,
                               package :processMxhrTree()};
                 cache.insert(record, function(err, items){
-                    if(err) { console.dir('mongo write:',err); }
+                    if(err) { console.log('mongo write:',err); }
                     console.log("ending total response");
                     total_response.send('{"cache" : "'+cache_hash+'"}');
                     total_response.end(); 
