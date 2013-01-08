@@ -142,8 +142,9 @@ app.post('/', function (request, response) {
                   total_response.end();
                   return;
                }else{
+                  console.log("general response");
                   payloads.files = httpParams.payload.split('\n');
-                  total_response.end();
+                  //total_response.end();
                }
            });
         });
