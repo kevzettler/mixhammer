@@ -141,6 +141,9 @@ app.post('/', function (request, response) {
                   total_response.write('{"cache" : "'+cache_hash+'"}');
                   total_response.end();
                   return;
+               }else{
+                  payloads.files = httpParams.payload.split('\n');
+                  total_response.end();
                }
            });
         });
