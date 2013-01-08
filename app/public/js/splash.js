@@ -110,7 +110,6 @@
                 $the_bin.show();
               }
             }
-            console.log("standard time", time, totalAssets, (Math.ceil(100 * (time / totalAssets)) / 100), time / totalAssets);
             $standard_output.prepend('<label>'+std_assets.length+' individual assets took: <strong>'+time+'ms</strong> about '+ (Math.ceil(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
           }
         }
