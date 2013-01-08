@@ -21,18 +21,8 @@ var sys = require('sys'),
   mongo = require('mongodb').MongoClient,
   app = express(),
   querystring = require('querystring'),
-  port = process.env.PORT || 8080;
-
-  try{
-      var env = JSON.parse(fs.readFileSync('/home/dotcloud/environment.json', 'utf-8'));
-      console.log(env);
-  }catch(ex){
-
-  }
-
-  var mongoURL = process.env.MONGOLAB_URI || 
-  process.env.MONGOHQ_URL || 
-  "mongodb://localhost:27017/mixhammer";
+  port = process.env.PORT || 8080,
+  mongoURL = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost:27017/mixhammer";
 
   console.log(mongoURL);
 
@@ -40,12 +30,15 @@ var sys = require('sys'),
 //regex for validating urls
 var  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
 
-app.use('/public', express.static(__dirname+'/public'));
-app.get('/', function(req,res){
+function rootGetHandler(req, res){
     res.render("index.ejs");
-});
+}
 
-app.get('/cache/:id', function(req, res){
+function cacheGetHandler(req,res){
+
+}
+
+function mongoDBConnectHandler(req, res){
     var cache_hash = req.params.id;
 
     mongo.connect(mongoURL, function(err, db) {
@@ -57,7 +50,11 @@ app.get('/cache/:id', function(req, res){
         res.send(item.package);
     });
   });
-});
+}
+
+app.use('/public', express.static(__dirname+'/public'));
+app.get('/', rootGetHandler);
+app.get('/cache/:id', function);
 
 app.post('/', function (request, response) {
   var data = "",
