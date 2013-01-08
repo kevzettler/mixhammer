@@ -106,7 +106,7 @@ app.post('/', function (request, response) {
           ,'Server' : 'node-apache'
         };
 
-        function processesEverything(){
+        function processEverything(){
             //iterate over each payload_type. css, js, images, etc. Only 'files' for a lazy load  
             console.log("iterating over payloads", payloads);    
             for(var payload_type in payloads){
