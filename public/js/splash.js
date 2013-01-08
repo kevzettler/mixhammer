@@ -11,6 +11,10 @@
       , totalAssets = 0
       , assets = {}
       ;
+
+      String.prototype.trim = function () {
+        return this.replace(/^\s*/, "").replace(/\s*$/, "");
+      }
       
       //
       // Click events for the show/hide tree links
@@ -80,10 +84,7 @@
             }
           }
         }    
-        $mxhr_output.prepend('<label>'+totalAssets+' assets in a MXHR request took: <strong>'+time+'ms</strong> about '+ (Math.round(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
-        
-        assets = {};
-        totalAssets = 0;
+        $mxhr_output.prepend('<label>'+totalAssets+' assets in a MXHR request took: <strong>'+time+'ms</strong> about '+ (Math.floor(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
         
         //we haave to decode the pretags content from base64 to display it as readable code
         $mxhr_output.find('pre').each(function(){
@@ -93,7 +94,7 @@
        
         //process assets in a traditional manner
         var normalStart = new Date().getTime();
-        var std_assets = $input.val().split('\n');
+        var std_assets = $input.val().trim().split('\n');
         var std_assets_data = {};
         var count = 0;
         
@@ -109,14 +110,12 @@
                 $the_bin.show();
               }
             }
-            $standard_output.prepend('<label>'+std_assets.length+' regular uncached assets took: <strong>'+time+'ms</strong> about '+ (Math.round(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
+            console.log("standard time", time, totalAssets, (Math.ceil(100 * (time / totalAssets)) / 100), time / totalAssets);
+            $standard_output.prepend('<label>'+std_assets.length+' individual assets took: <strong>'+time+'ms</strong> about '+ (Math.ceil(100 * (time / totalAssets)) / 100) + 'ms per asset</label>');
           }
         }
         
-        console.log("iterating over assets");
         $.each(std_assets, function(index, value){
-         console.log("wtf", index, value, file_ext_regex);
-       
           var matches = value.match(file_ext_regex);
           if(matches == null){ return false;}
           var ext = matches[1];
@@ -185,15 +184,15 @@
             });
            
             var scp_link = $('<a href="#" class="asset_link">+ '+ext+'</a>');
-            
-            $output.text(text);//I forgot what this does deprecated?
-            
+
             //only append one link per asset type
             if($standard_output.find('.'+ext+'_bin .asset_link').length <=0){
               $standard_output.find('.'+ext+'_bin').prepend('<a href="#" class="asset_link">+ '+std_assets_data[ext].count+' '+ ext + '</a> \n');
             }
             $standard_output.find('.'+ext+'_bin div:first').append(scp_link).append(iframe).append('<br />');
           }
+
+            $output.val(text);//I forgot what this does deprecated?
            
         });
         $('#form_submit').val(submit_default).removeAttr('disabled');
@@ -203,6 +202,8 @@
       function mxhr_call(cache_name){
         _gaq.push(['_trackEvent', 'Cache', cache_name, $input.val()]);
         streamStart = new Date().getTime();
+        assets = {};
+        totalAssets = 0;
         //use mxhr request for assets
         $.mxhr.load({
           url : '/cache/'+cache_name,
