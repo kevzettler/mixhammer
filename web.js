@@ -134,7 +134,7 @@ app.post('/', function (request, response) {
                 return console.log("mongo query for cache:",err);
             }
 
-               if(typeof item != 'undefined'){
+               if(item != null){
                   console.log("checking for item!", item, typeof item);
                   cache_stat = item.package;
                   sys.puts("Payload was cached" + cache_hash + "\n");
