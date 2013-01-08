@@ -133,8 +133,9 @@ app.post('/', function (request, response) {
                 console.log("No Cache, building payload" + cache_hash + "\n", payloads);
                 return console.log("mongo query for cache:",err);
             }
-               cache_stat = item.package;
-               if(cache_stat){
+
+               if(typeof item != 'undefined'){
+                  cache_stat = item.package;
                   sys.puts("Payload was cached" + cache_hash + "\n");
                   total_response.write('{"cache" : "'+cache_hash+'"}');
                   total_response.end();
