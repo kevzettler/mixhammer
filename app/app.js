@@ -18,9 +18,18 @@ var sys = require('sys'),
   crypto = require('crypto'),
   base64 = require('./base64'),
   express = require('express'),
-  mongo = require('mongodb').MongoClient;
-  app = express();
+  mongo = require('mongodb').MongoClient,
+  app = express(),
   querystring = require('querystring');
+
+  try{
+      var env = JSON.parse(fs.readFileSync('/home/dotcloud/environment.json', 'utf-8'));
+  }catch(ex){
+    
+  }
+
+  var mongoURL = (env) ? env.DOTCLOUD_DATA_MONGODB_URL : "mongodb://localhost:27017/mixhammer";
+
   
 //regex for validating urls
 var  url_regex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/i;
@@ -33,7 +42,7 @@ app.get('/', function(req,res){
 app.get('/cache/:id', function(req, res){
     var cache_hash = req.params.id;
 
-    mongo.connect("mongodb://localhost:27017/mixhammer", function(err, db) {
+    mongo.connect(mongoURL, function(err, db) {
       if(err) { return console.dir(err); }
 
       var collection = db.collection('cache');
@@ -104,7 +113,7 @@ app.post('/', function (request, response) {
        var cache_stat;        
         //try reading the cache file
         // try{
-        mongo.connect("mongodb://localhost:27017/mixhammer", function(err, db) {
+        mongo.connect(mongoURL, function(err, db) {
             if(err) { 
                 payloads.files = httpParams.payload.split('\n');
                 console.log("No Cache, building payload" + cache_hash + "\n", payloads);
@@ -183,7 +192,7 @@ app.post('/', function (request, response) {
 
             if(count == totalassets){              
               req.end();
-              mongo.connect("mongodb://localhost:27017/mixhammer", function(err, db){
+              mongo.connect(mongoURL, function(err, db){
                 if(err) { 
                     console.dir(err); 
                     total_response.send('{"cache" : "'+cache_hash+'"}');
