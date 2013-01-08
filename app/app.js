@@ -24,11 +24,12 @@ var sys = require('sys'),
 
   try{
       var env = JSON.parse(fs.readFileSync('/home/dotcloud/environment.json', 'utf-8'));
+      console.log(env);
   }catch(ex){
-    
+
   }
 
-  var mongoURL = (env) ? env.DOTCLOUD_DATA_MONGODB_URL : "mongodb://localhost:27017/mixhammer";
+  var mongoURL = (env) ? env.DOTCLOUD_DB_MONGODB_URL : "mongodb://localhost:27017/mixhammer";
 
   
 //regex for validating urls
