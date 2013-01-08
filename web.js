@@ -105,6 +105,85 @@ app.post('/', function (request, response) {
           ,'Content-Encoding' : 'base64'
           ,'Server' : 'node-apache'
         };
+
+        function processesEverything(){
+            //iterate over each payload_type. css, js, images, etc. Only 'files' for a lazy load  
+            console.log("iterating over payloads", payloads);    
+            for(var payload_type in payloads){
+              //totalassets += payloads[payload_type].length; //total up the assets for each section              
+              //iterate over each url in the payload collection and build the mxhr_tree
+              for(var i=0; i<payloads[payload_type].length; i++){ 
+                var asset_url = payloads[payload_type][i].trim();
+                if(!mxhr_tree[asset_url]){//set it if its not there
+                  mxhr_tree[asset_url] = {count : 1, mxhr : ''};
+                }else{//otherwise increment it
+                  mxhr_tree[asset_url].count += 1;
+              }
+            }
+          }
+
+          //iterate over the mxhr_tree and call each url 
+          console.log("iterating over assets", mxhr_tree);
+          for (var asset in mxhr_tree){
+              if(asset == ''){ continue; }
+              totalassets += 1;
+              //create a closure to pair the asset with the asynch procedure
+              (function(asset){
+                var rep_data = '',
+                urlObj = url.parse(asset.trim()),
+                httpOpts = {
+                    port: 80, 
+                    hostname: urlObj.hostname,
+                    path: urlObj.pathname,
+                    method: "GET"};
+
+                    console.log("requesting", httpOpts);
+
+                    var req = http.request(httpOpts, function(response){
+                if (response.headers['content-type'] && response.headers['content-type'].match('image')) { //images have to be encoded to binary
+                    response.setEncoding('binary');
+                }
+
+                response.on('data', function(chunk){
+                    rep_data += chunk;            
+                });
+
+                response.on('end', function(){
+                    console.log("got response for ", httpOpts);
+                //before we were only encoding the images, lets try encoding all general badassery
+                //can decode on frontend for displaying css / js
+                rep_data = base64.encode(rep_data);
+
+                mxhr_tree[asset].mxhr = response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline;
+                count++;
+
+                if(count == totalassets){              
+                  req.end();
+                  mongo.connect(mongoURL, function(err, db){
+                    if(err) { 
+                        console.log("mongo connect for write: ",err); 
+                        total_response.send('{"cache" : "'+cache_hash+'"}');
+                        total_response.end();
+                    }
+
+                    var cache = db.collection('cache');
+                    var record = {hash: cache_hash,
+                      package :processMxhrTree()};
+                      cache.insert(record, function(err, items){
+                        if(err) { console.log('mongo write:',err); }
+                        console.log("ending total response");
+                        total_response.send('{"cache" : "'+cache_hash+'"}');
+                        total_response.end(); 
+                    });
+                  });             
+              }
+          });//end of the response 'end' listener
+        });//end of the httpC_req 'response' listener
+
+        req.end(); //if we get here make sure to kill the httpC_req
+      })(asset); //call the closure pass it i for a local scope
+     }
+    }//processes everything
         
         
      total_response = response;
@@ -118,7 +197,6 @@ app.post('/', function (request, response) {
        cache_hash = md5.digest('hex'); 
        var cache_stat;        
         //try reading the cache file
-        // try{
         mongo.connect(mongoURL, function(err, db) {
             if(err) { 
                 payloads.files = httpParams.payload.split('\n');
@@ -128,109 +206,34 @@ app.post('/', function (request, response) {
 
             var collection = db.collection('cache');
             collection.findOne({hash: cache_hash}, function(err, item){
-            if(err) {
-                payloads.files = httpParams.payload.split('\n');
-                console.log("No Cache, building payload" + cache_hash + "\n", payloads);
-                return console.log("mongo query for cache:",err);
-            }
+                if(err) {
+                    payloads.files = httpParams.payload.split('\n');
+                    processEverything();
+                    console.log("No Cache, building payload" + cache_hash + "\n", payloads);
+                    return console.log("mongo query for cache:",err);
+                }
 
-               if(item != null){
+                if(item != null){
                   console.log("checking for item!", item, typeof item);
                   cache_stat = item.package;
                   sys.puts("Payload was cached" + cache_hash + "\n");
                   total_response.write('{"cache" : "'+cache_hash+'"}');
                   total_response.end();
                   return;
-               }else{
+              }else{
                   console.log("general response");
                   payloads.files = httpParams.payload.split('\n');
+                  processEverything();
                   //total_response.end();
-               }
-           });
-        });
-
-
-    }
-    //iterate over each payload_type. css, js, images, etc. Only 'files' for a lazy load      
-    for(var payload_type in payloads){
-      //totalassets += payloads[payload_type].length; //total up the assets for each section
-      
-      //iterate over each url in the payload collection and build the mxhr_tree
-      for(var i=0; i<payloads[payload_type].length; i++){ 
-        var asset_url = payloads[payload_type][i].trim();
-        if(!mxhr_tree[asset_url]){//set it if its not there
-          mxhr_tree[asset_url] = {count : 1, mxhr : ''};
-        }else{//otherwise increment it
-          mxhr_tree[asset_url].count += 1;
-        }
-      }
-    }
-    
-    //iterate over the mxhr_tree and call each url 
-    console.log("iterating over assets", mxhr_tree);
-    for (var asset in mxhr_tree){
-      if(asset == ''){ continue; }
-      totalassets += 1;
-      //create a closure to pair the asset with the asynch procedure
-      (function(asset){
-      
-        var rep_data = '',
-            urlObj = url.parse(asset.trim()),
-            httpOpts = {
-                port: 80, 
-                hostname: urlObj.hostname,
-                path: urlObj.pathname,
-                method: "GET"};
-
-        console.log("requesting", httpOpts);
-
-        var req = http.request(httpOpts, function(response){
-          if (response.headers['content-type'] && response.headers['content-type'].match('image')) { //images have to be encoded to binary
-            response.setEncoding('binary');
-          }
-          
-          response.on('data', function(chunk){
-            rep_data += chunk;            
+              }
           });
-          
-          response.on('end', function(){
-            console.log("got response for ", httpOpts);
-           //before we were only encoding the images, lets try encoding all general badassery
-           //can decode on frontend for displaying css / js
-           rep_data = base64.encode(rep_data);
+        });
+    }else{
+        processEverything();
+    }
 
-            mxhr_tree[asset].mxhr = response.headers['content-type'] + sep + ' ' + sep  + rep_data + newline;
-            count++;
-
-            if(count == totalassets){              
-              req.end();
-              mongo.connect(mongoURL, function(err, db){
-                if(err) { 
-                    console.log("mongo connect for write: ",err); 
-                    total_response.send('{"cache" : "'+cache_hash+'"}');
-                    total_response.end();
-                }
-
-                var cache = db.collection('cache');
-                var record = {hash: cache_hash,
-                              package :processMxhrTree()};
-                cache.insert(record, function(err, items){
-                    if(err) { console.log('mongo write:',err); }
-                    console.log("ending total response");
-                    total_response.send('{"cache" : "'+cache_hash+'"}');
-                    total_response.end(); 
-                });
-              });             
-            }
-            
-          });//end of the response 'end' listener
-        });//end of the httpC_req 'response' listener
-        
-        req.end(); //if we get here make sure to kill the httpC_req
-      })(asset); //call the closure pass it i for a local scope
-     }
-     
-  });
+   
+ }); // 'end' function
 
 })
 app.listen(port);
