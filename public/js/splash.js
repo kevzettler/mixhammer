@@ -1,64 +1,38 @@
-$(document).ready(function(){
-    var $input_form = $('#input_form')
-    , $output = $('#output')
-    , $input = $('#input')
-    , $submit_btn = $("#form_submit")
-    , $mxhr_output = $('#mxhr-output')
-    , $standard_output = $('#standard-output')
-    , submit_default = $submit_btn.val()
-    , file_ext_regex = /\.([a-z]*?)$/i
-    , streamStart
-    , totalAssets = 0
-    , assets = {}
-    ;
+    $(document).ready(function(){
+      var $input_form = $('#input_form')
+      , $output = $('#output')
+      , $input = $('#input')
+      , $submit_btn = $("#form_submit")
+      , $mxhr_output = $('#mxhr-output')
+      , $standard_output = $('#standard-output')
+      , submit_default = $submit_btn.val()
+      , file_ext_regex = /\.([a-z]*?)$/i
+      , streamStart
+      , totalAssets = 0
+      , assets = {}
+      ;
 
-    String.prototype.trim = function () {
+      String.prototype.trim = function () {
         return this.replace(/^\s*/, "").replace(/\s*$/, "");
-    }
-      
-
-    function assetLinkClick(e){
-        e.preventDefault();
-        var $target = $(e.target);
-        if($target.text().charAt(0) == '+'){
-          _gaq.push(['_trackEvent', 'Click', 'Show', $target.text()]);
-          $target.text($target.text().replace('+', '-'));
-      }else{
-          _gaq.push(['_trackEvent', 'Click', 'Hide', $target.text()]);
-          $target.text($target.text().replace('-', '+'));
       }
-      $target.next().toggle('slow');
-      return false;
-    }
-
-    function formSubmit(e){
-        e.preventDefault();
-        _gaq.push(['_trackEvent', 'Click', 'Generate']);
-        var $this = $(this);
-        //reset every thing
-        $submit_btn.val('Loading...').attr('disabled', 'disabled');
-        $standard_output.empty();
-        $mxhr_output.empty();
-
-        //ajax to the server to build the cache
-        console.log("ajaxin", $input.val());
-        $.ajax({
-          url : $this.attr('action'),
-          type : $this.attr('method'),
-          dataType: 'json',
-          data: {
-            payload : $input.val()
-          },
-          success : function(json){
-            console.log("success", json);
-            if(json.cache){
-              mxhr_call(json.cache);
-            }
+      
+      //
+      // Click events for the show/hide tree links
+      //
+      $('body').click(function(e){
+        var $target = $(e.target);
+        if($target.hasClass('asset_link')){
+          if($target.text().charAt(0) == '+'){
+              _gaq.push(['_trackEvent', 'Click', 'Show', $target.text()]);
+            $target.text($target.text().replace('+', '-'));
+          }else{
+              _gaq.push(['_trackEvent', 'Click', 'Hide', $target.text()]);
+            $target.text($target.text().replace('-', '+'));
           }
-        });
-
-        return false;
-    }
+          $target.next().toggle('slow');
+          return false;
+        }
+      });
       
       // --------------------------------------
       // mxhr listner setup
@@ -66,7 +40,6 @@ $(document).ready(function(){
       
       //handle images
       function processImage(payload, metaData, mime){
-        console.log("image processesed");
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><img src="data:image/gif;base64,'+payload+'" style="display:none;"/> <br />\n';
         if(!assets.images){
           assets.images = {count: 0, content: ''};
@@ -77,7 +50,6 @@ $(document).ready(function(){
       
       //handle 'scripts'
       function processScript(payload, metaData, mime){
-        console.log("script processed");
         mime = mime.split('/')[1];
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><pre style="display:none;">'+payload+'</pre> <br />\n';
         if(!assets[mime]){
@@ -98,7 +70,6 @@ $(document).ready(function(){
       $.mxhr.listen('text/css', processScript);
       
       $.mxhr.listen('complete', function(text) {
-        console.log("mxhr complete", text);
         var time = new Date().getTime() - streamStart;
         _gaq.push(['_trackEvent', 'Complete', 'MXHR', time, $input.val()]);
         for(var asset in assets){
@@ -228,7 +199,7 @@ $(document).ready(function(){
       
       //function to call the mxhr request
       function mxhr_call(cache_name){
-        console.log("mxhr_call", cache_name, $input_form.attr('method'));
+        console.log('mxhr_call', cache_name);
         _gaq.push(['_trackEvent', 'Cache', cache_name, $input.val()]);
         streamStart = new Date().getTime();
         assets = {};
@@ -239,8 +210,33 @@ $(document).ready(function(){
           type : $input_form.attr('method')
         });
       }
-
-      $(document).on('click', '.asset_link', assetLinkClick);
-      $input_form.submit(formSubmit);
+      
+      //form submit
+      $input_form.submit(function(){
+        _gaq.push(['_trackEvent', 'Click', 'Generate']);
+        var $this = $(this);
+        //reset every thing
+        $submit_btn.val('Loading...').attr('disabled', 'disabled');
+        $standard_output.empty();
+        $mxhr_output.empty();
+                
+        //ajax to the server to build the cache
+        $.ajax({
+          url : $this.attr('action'),
+          type : $this.attr('method'),
+          dataType: 'json',
+          data: {
+            payload : $input.val(),
+            lazy_mode : true
+          },
+        success : function(json){
+            if(json.cache){
+              mxhr_call(json.cache);
+            }
+          }
+        });
+                
+        return false;
+      });
      
     });

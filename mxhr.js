@@ -91,6 +91,7 @@
 		// --------------------------------------------------------------------------------
 
 		load: function(url) {
+            console.log("mxhr loading", url);
 			this.req = this.createXhrObject();
 			if (this.req) {
 				this.req.open('GET', url, true);
@@ -138,11 +139,14 @@
 		readyStateHandler: function() {
 
 			if (this.req.readyState === 3 && this.getLatestPacketInterval === null) {
-					
+				console.log("mxhr ready state 3 polling");
 				// Start polling.
 
 				var that = this;					
-				this.getLatestPacketInterval = window.setInterval(function() { that.getLatestPacket(); }, 15);
+				this.getLatestPacketInterval = window.setInterval(function() { 
+                    console.log("get latest packet call");
+                    that.getLatestPacket();
+                }, 15);
 			}
 
 			if (this.req.readyState == 4) {

@@ -107,18 +107,25 @@
 		*
 		*/
 		load: function(settings){
+          console.log("mxhr load", settings);
 		  var that = this;
+          console.log("whats that?", that.readyStateHandler);
 		  this.req = $.ajax({
                     url : settings.url,
                     type : settings.method,
-                    data : settings.data,
-                    dataType : 'text',
+                    // data : settings.data,
+                    dataType : 'text/html',
                     xhr : that.createXhrObject
                   });
+
+          console.log('req opject',this.req, this.req.xhr);
             
-      this.req.onreadystatechange = function() {
-           that.readyStateHandler();
-      };
+           this.req.onreadystatechange = function() {
+             console.log("ready state change");
+             that.readyStateHandler();
+           };
+
+           console.log('new ready state?',this.req.onreadystatechange);
 		},
 
 		// --------------------------------------------------------------------------------
@@ -127,7 +134,8 @@
 		// Try different XHR objects until one works. Pulled from YUI Connection 2.6.0.
 		// --------------------------------------------------------------------------------
 		
-		createXhrObject: function() {
+		createXhrObject: function(that_scope) {
+            console.log("xhr creating");
 			var req;
 			try {
 				req = new XMLHttpRequest();
@@ -142,6 +150,10 @@
 				}
 			}
 			finally {
+                req.onreadystatechange = function(){
+                    console.log("other readystate");
+                    that.readyStateHandler();
+                }
 				return req;
 			}
 		},		
@@ -153,16 +165,22 @@
 		// --------------------------------------------------------------------------------
 
 		readyStateHandler: function() {
+            console.log("readyStateHandler");
 			if (this.req.readyState === 3 && this.getLatestPacketInterval === null) {
-					
+				
+                console.log("ready state 3");	
 				// Start polling.
 
 				var that = this;					
-				this.getLatestPacketInterval = window.setInterval(function() { that.getLatestPacket(); }, 1);
+				this.getLatestPacketInterval = window.setInterval(function() { 
+                    console.log("last packet check");
+                    that.getLatestPacket(); 
+                }, 1);
 			}
 
 			if (this.req.readyState == 4) {
-        
+
+                console.log("readyState 4");
 				// Stop polling.
 				clearInterval(this.getLatestPacketInterval);
 
