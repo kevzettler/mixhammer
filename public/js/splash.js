@@ -66,6 +66,7 @@ $(document).ready(function(){
       
       //handle images
       function processImage(payload, metaData, mime){
+        console.log("image processesed");
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><img src="data:image/gif;base64,'+payload+'" style="display:none;"/> <br />\n';
         if(!assets.images){
           assets.images = {count: 0, content: ''};
@@ -76,6 +77,7 @@ $(document).ready(function(){
       
       //handle 'scripts'
       function processScript(payload, metaData, mime){
+        console.log("script processed");
         mime = mime.split('/')[1];
         var content = '<a href="#" class="asset_link">+ '+mime+'</a><pre style="display:none;">'+payload+'</pre> <br />\n';
         if(!assets[mime]){
@@ -226,6 +228,7 @@ $(document).ready(function(){
       
       //function to call the mxhr request
       function mxhr_call(cache_name){
+        console.log("mxhr_call", cache_name, $input_form.attr('method'));
         _gaq.push(['_trackEvent', 'Cache', cache_name, $input.val()]);
         streamStart = new Date().getTime();
         assets = {};

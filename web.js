@@ -142,8 +142,7 @@ function cacheGetMongoConnect(err, db, req, res) {
   var collection = db.collection('cache');
   collection.findOne({hash: cache_hash}, function(err, item){
     if(err) { return console.log("mongo cache lookup init",err); }
-    console.log("sending response for", item.package);
-    res.send(item.package);
+       res.send(item.package);
     });
 }
 

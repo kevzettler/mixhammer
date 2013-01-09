@@ -146,6 +146,7 @@
 			}
 
 			if (this.req.readyState == 4) {
+                console.log("mxhr ready state complete");
 
 				// Stop polling.
 
